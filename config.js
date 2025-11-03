@@ -2,34 +2,50 @@
 // AI Classroom - Configuration
 // ==========================================
 
-// IMPORTANT: Replace these with your actual Supabase credentials
-// Get them from: https://app.supabase.com/project/_/settings/api
+// This configuration supports both:
+// 1. Netlify environment variables (recommended for production)
+// 2. Direct configuration (for local development)
 
 const CONFIG = {
   supabase: {
-    url: 'YOUR_SUPABASE_URL_HERE',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY_HERE',
+    // Priority: Netlify env vars > Direct configuration
+    url: (typeof window !== 'undefined' && window.NETLIFY_SUPABASE_URL) 
+      ? window.NETLIFY_SUPABASE_URL 
+      : 'YOUR_SUPABASE_URL_HERE',
+    
+    anonKey: (typeof window !== 'undefined' && window.NETLIFY_SUPABASE_ANON_KEY) 
+      ? window.NETLIFY_SUPABASE_ANON_KEY 
+      : 'YOUR_SUPABASE_ANON_KEY_HERE',
   },
   
   // App configuration
   app: {
     name: 'AI Classroom',
     version: '2.0.0',
-    environment: 'production', // 'development' or 'production'
+    environment: 'production',
   },
-  
-  // GitHub OAuth will be configured in Supabase dashboard
-  // No need to add GitHub credentials here
 };
 
 // Validation function
 const isConfigured = () => {
-  return CONFIG.supabase.url !== 'YOUR_SUPABASE_URL_HERE' && 
-         CONFIG.supabase.anonKey !== 'YOUR_SUPABASE_ANON_KEY_HERE';
+  const url = CONFIG.supabase.url;
+  const key = CONFIG.supabase.anonKey;
+  
+  return url && url !== 'YOUR_SUPABASE_URL_HERE' && 
+         key && key !== 'YOUR_SUPABASE_ANON_KEY_HERE' &&
+         url.includes('supabase.co');
 };
+
+// Debug info (only in development)
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  console.log('🔧 Configuration status:', {
+    configured: isConfigured(),
+    usingNetlifyVars: !!(window.NETLIFY_SUPABASE_URL),
+    url: CONFIG.supabase.url.substring(0, 30) + '...',
+  });
+}
 
 // Export configuration
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { CONFIG, isConfigured };
 }
-
