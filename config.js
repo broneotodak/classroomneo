@@ -2,20 +2,17 @@
 // AI Classroom - Configuration
 // ==========================================
 
-// This configuration supports both:
-// 1. Netlify environment variables (recommended for production)
-// 2. Direct configuration (for local development)
+// IMPORTANT: Add your Supabase credentials here OR set them as Netlify environment variables
+// Get them from: https://app.supabase.com/project/_/settings/api
+
+// For Netlify: Set SUPABASE_URL and SUPABASE_ANON_KEY as environment variables in Netlify dashboard
+// For local dev: Replace the values below with your actual credentials
 
 const CONFIG = {
   supabase: {
-    // Priority: Netlify env vars > Direct configuration
-    url: (typeof window !== 'undefined' && window.NETLIFY_SUPABASE_URL) 
-      ? window.NETLIFY_SUPABASE_URL 
-      : 'YOUR_SUPABASE_URL_HERE',
-    
-    anonKey: (typeof window !== 'undefined' && window.NETLIFY_SUPABASE_ANON_KEY) 
-      ? window.NETLIFY_SUPABASE_ANON_KEY 
-      : 'YOUR_SUPABASE_ANON_KEY_HERE',
+    // The app will use environment variables from Netlify if available
+    url: 'https://tsuowadcbrztlplzaobf.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzdW93YWRjYnJ6dGxwbHphb2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxNTY1NTYsImV4cCI6MjA3NzczMjU1Nn0.OCxKgkzcGWVkHQFnVA-P_COagpuqkUlFtjfpzoqYkEY',
   },
   
   // App configuration
@@ -35,15 +32,6 @@ const isConfigured = () => {
          key && key !== 'YOUR_SUPABASE_ANON_KEY_HERE' &&
          url.includes('supabase.co');
 };
-
-// Debug info (only in development)
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-  console.log('🔧 Configuration status:', {
-    configured: isConfigured(),
-    usingNetlifyVars: !!(window.NETLIFY_SUPABASE_URL),
-    url: CONFIG.supabase.url.substring(0, 30) + '...',
-  });
-}
 
 // Export configuration
 if (typeof module !== 'undefined' && module.exports) {
