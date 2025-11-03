@@ -17,379 +17,244 @@
                 <span class="logo">🎓</span>
                 <span class="brand-text">AI Classroom</span>
             </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#cursor" class="nav-link">Cursor</a></li>
-                <li><a href="#github" class="nav-link">GitHub</a></li>
-                <li><a href="#netlify" class="nav-link">Netlify</a></li>
-                <li><a href="#supabase" class="nav-link">Supabase</a></li>
-                <li><a href="#demo" class="nav-link">Demo</a></li>
-            </ul>
+            <div class="nav-right">
+                <!-- Logged out state -->
+                <div id="navLoggedOut" class="nav-auth" style="display: none;">
+                    <button id="loginBtn" class="btn btn-primary btn-small">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                        </svg>
+                        Sign in with GitHub
+                    </button>
+                </div>
+                
+                <!-- Logged in state -->
+                <div id="navLoggedIn" class="nav-auth" style="display: none;">
+                    <a href="#dashboard" class="nav-link">Dashboard</a>
+                    <div class="user-menu">
+                        <button class="user-menu-btn" id="userMenuBtn">
+                            <img id="userAvatar" src="" alt="User" class="user-avatar">
+                            <span id="userName">User</span>
+                        </button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <div class="user-menu-header">
+                                <div class="user-menu-name" id="userMenuName"></div>
+                                <div class="user-menu-email" id="userMenuEmail"></div>
+                            </div>
+                            <div class="user-menu-divider"></div>
+                            <a href="#dashboard" class="user-menu-item">📊 Dashboard</a>
+                            <a href="#progress" class="user-menu-item">📈 My Progress</a>
+                            <div class="user-menu-divider"></div>
+                            <button id="logoutBtn" class="user-menu-item">🚪 Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title">Master Full Stack Development</h1>
-                <p class="hero-subtitle">Learn how to build, deploy, and scale modern web applications using Cursor AI, GitHub, Netlify, and Supabase</p>
-                <div class="hero-buttons">
-                    <a href="#cursor" class="btn btn-primary">Get Started</a>
-                    <a href="#demo" class="btn btn-secondary">View Demo</a>
-                </div>
-            </div>
-            <div class="tech-stack">
-                <div class="tech-card">
-                    <span class="tech-icon">⚡</span>
-                    <h3>Cursor AI</h3>
-                    <p>AI-powered coding</p>
-                </div>
-                <div class="tech-card">
-                    <span class="tech-icon">🐙</span>
-                    <h3>GitHub</h3>
-                    <p>Version control</p>
-                </div>
-                <div class="tech-card">
-                    <span class="tech-icon">🚀</span>
-                    <h3>Netlify</h3>
-                    <p>Instant deployment</p>
-                </div>
-                <div class="tech-card">
-                    <span class="tech-icon">💾</span>
-                    <h3>Supabase</h3>
-                    <p>Backend as a service</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Cursor Tutorial Section -->
-    <section id="cursor" class="tutorial-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Step 1</span>
-                <h2 class="section-title">Setting Up Cursor AI</h2>
-                <p class="section-description">Get started with the most powerful AI-powered code editor</p>
-            </div>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Download Cursor</h3>
-                        <p>Visit <a href="https://cursor.sh" target="_blank">cursor.sh</a> and download the latest version for your operating system (Windows, macOS, or Linux).</p>
-                        <div class="code-block">
-                            <code>https://cursor.sh</code>
+    <!-- Main Content Container -->
+    <div id="appContainer">
+        
+        <!-- Home/Landing Page -->
+        <section id="home" class="page-section active">
+            <div class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Master Full Stack Development</h1>
+                        <p class="hero-subtitle">Learn how to build, deploy, and scale modern web applications using Cursor AI, GitHub, Netlify, and Supabase</p>
+                        <div class="hero-buttons">
+                            <button id="getStartedBtn" class="btn btn-primary">Get Started</button>
+                            <a href="#about" class="btn btn-secondary">Learn More</a>
                         </div>
                     </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Install and Launch</h3>
-                        <p>Run the installer and follow the setup wizard. Cursor is built on VS Code, so it will feel familiar if you've used it before.</p>
-                        <ul class="feature-list">
-                            <li>✓ Import your VS Code settings and extensions</li>
-                            <li>✓ Configure your preferred theme</li>
-                            <li>✓ Set up keyboard shortcuts</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Configure AI Features</h3>
-                        <p>Sign in to access AI-powered features like Chat, Cmd+K for inline edits, and auto-completion.</p>
-                        <div class="tips-box">
-                            <strong>Pro Tips:</strong>
-                            <ul>
-                                <li>Use <kbd>Cmd/Ctrl + K</kbd> to edit code inline</li>
-                                <li>Use <kbd>Cmd/Ctrl + L</kbd> to open AI chat</li>
-                                <li>Press <kbd>Tab</kbd> to accept AI suggestions</li>
-                            </ul>
+                    <div class="tech-stack">
+                        <div class="tech-card">
+                            <span class="tech-icon">⚡</span>
+                            <h3>Cursor AI</h3>
+                            <p>AI-powered coding</p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Create Your First Project</h3>
-                        <p>Open Cursor and create a new folder for your project. Use the integrated terminal to initialize your project.</p>
-                        <div class="code-block">
-                            <code>mkdir my-web-project<br>cd my-web-project<br>code .</code>
+                        <div class="tech-card">
+                            <span class="tech-icon">🐙</span>
+                            <h3>GitHub</h3>
+                            <p>Version control</p>
+                        </div>
+                        <div class="tech-card">
+                            <span class="tech-icon">🚀</span>
+                            <h3>Netlify</h3>
+                            <p>Instant deployment</p>
+                        </div>
+                        <div class="tech-card">
+                            <span class="tech-icon">💾</span>
+                            <h3>Supabase</h3>
+                            <p>Backend as a service</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- GitHub Tutorial Section -->
-    <section id="github" class="tutorial-section alt-bg">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Step 2</span>
-                <h2 class="section-title">GitHub Integration</h2>
-                <p class="section-description">Version control and collaboration made easy</p>
-            </div>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Create GitHub Account</h3>
-                        <p>If you don't have one, sign up at <a href="https://github.com" target="_blank">github.com</a>. GitHub is free for unlimited public and private repositories.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Install Git</h3>
-                        <p>Download and install Git from <a href="https://git-scm.com" target="_blank">git-scm.com</a>. Verify installation by running:</p>
-                        <div class="code-block">
-                            <code>git --version</code>
+            <div id="about" class="features-section">
+                <div class="container">
+                    <h2 class="section-title">Why AI Classroom?</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎯</div>
+                            <h3>Structured Learning Path</h3>
+                            <p>Follow a clear, step-by-step curriculum designed for beginners</p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Configure Git</h3>
-                        <p>Set up your identity in Git. This information will be used for all your commits.</p>
-                        <div class="code-block">
-                            <code>git config --global user.name "Your Name"<br>git config --global user.email "your.email@example.com"</code>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Progress Tracking</h3>
+                            <p>Track your learning journey and see how far you've come</p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Create a Repository</h3>
-                        <p>Initialize Git in your project and create your first repository:</p>
-                        <div class="code-block">
-                            <code>git init<br>git add .<br>git commit -m "Initial commit"</code>
+                        <div class="feature-card">
+                            <div class="feature-icon">🤝</div>
+                            <h3>GitHub Integration</h3>
+                            <p>Sign in with GitHub and build your developer portfolio</p>
                         </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h3>Push to GitHub</h3>
-                        <p>Create a new repository on GitHub, then link it to your local project:</p>
-                        <div class="code-block">
-                            <code>git remote add origin https://github.com/username/repo.git<br>git branch -M main<br>git push -u origin main</code>
-                        </div>
-                        <div class="tips-box">
-                            <strong>💡 Tip:</strong> Use GitHub Desktop or Cursor's built-in Git features for a visual interface!
+                        <div class="feature-card">
+                            <div class="feature-icon">💡</div>
+                            <h3>Hands-on Projects</h3>
+                            <p>Build real projects and deploy them to production</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Netlify Tutorial Section -->
-    <section id="netlify" class="tutorial-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Step 3</span>
-                <h2 class="section-title">Deploy with Netlify</h2>
-                <p class="section-description">Deploy your website in seconds with continuous deployment</p>
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page-section">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Welcome back, <span id="dashboardUserName">Student</span>! 👋</h1>
+                        <p class="dashboard-subtitle">Continue your learning journey</p>
+                    </div>
+                </div>
+
+                <!-- Progress Overview -->
+                <div class="progress-overview">
+                    <div class="progress-card">
+                        <div class="progress-card-icon">📚</div>
+                        <div class="progress-card-content">
+                            <div class="progress-card-label">Overall Progress</div>
+                            <div class="progress-card-value" id="overallProgress">0%</div>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <div class="progress-card-icon">✅</div>
+                        <div class="progress-card-content">
+                            <div class="progress-card-label">Completed Steps</div>
+                            <div class="progress-card-value" id="completedSteps">0</div>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <div class="progress-card-icon">⏱️</div>
+                        <div class="progress-card-content">
+                            <div class="progress-card-label">Time Remaining</div>
+                            <div class="progress-card-value" id="timeRemaining">--</div>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <div class="progress-card-icon">🎯</div>
+                        <div class="progress-card-content">
+                            <div class="progress-card-label">Current Module</div>
+                            <div class="progress-card-value" id="currentModule">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Continue Learning -->
+                <div class="continue-section">
+                    <h2>Continue Learning</h2>
+                    <div id="nextStepCard" class="next-step-card" style="display: none;">
+                        <div class="next-step-content">
+                            <div class="next-step-badge">Up Next</div>
+                            <h3 id="nextStepTitle">Loading...</h3>
+                            <p id="nextStepModule">Module</p>
+                            <button id="continueBtn" class="btn btn-primary">Continue Learning →</button>
+                        </div>
+                    </div>
+                    <div id="completedCard" class="completed-card" style="display: none;">
+                        <div class="completed-icon">🎉</div>
+                        <h3>Congratulations!</h3>
+                        <p>You've completed all modules in AI Classroom!</p>
+                    </div>
+                </div>
+
+                <!-- Modules Overview -->
+                <div class="modules-overview">
+                    <h2>Your Modules</h2>
+                    <div id="modulesList" class="modules-list">
+                        <div class="loading">Loading modules...</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Sign Up for Netlify</h3>
-                        <p>Go to <a href="https://netlify.com" target="_blank">netlify.com</a> and sign up using your GitHub account for seamless integration.</p>
-                    </div>
-                </div>
+        </section>
 
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Connect Your Repository</h3>
-                        <p>Click "Add new site" → "Import an existing project" → Select GitHub and choose your repository.</p>
-                        <ul class="feature-list">
-                            <li>✓ Automatic builds on every push</li>
-                            <li>✓ Preview deployments for pull requests</li>
-                            <li>✓ Instant rollbacks if needed</li>
-                        </ul>
+        <!-- Learning Page (Module Content) -->
+        <section id="learning" class="page-section">
+            <div class="learning-container">
+                <!-- Sidebar -->
+                <aside class="learning-sidebar">
+                    <div class="sidebar-header">
+                        <button id="backToDashboard" class="btn-back">← Dashboard</button>
                     </div>
-                </div>
+                    <div id="moduleSidebar" class="module-sidebar">
+                        <!-- Populated dynamically -->
+                    </div>
+                </aside>
 
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Configure Build Settings</h3>
-                        <p>For a static HTML site, you typically don't need build commands. Just set the publish directory:</p>
-                        <div class="code-block">
-                            <code>Build command: (leave empty)<br>Publish directory: . (or your build folder)</code>
-                        </div>
+                <!-- Main Content -->
+                <main class="learning-content">
+                    <div id="stepContent" class="step-content-container">
+                        <div class="loading">Select a step to begin...</div>
                     </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Deploy Your Site</h3>
-                        <p>Click "Deploy site" and Netlify will build and publish your website. You'll get a unique URL like:</p>
-                        <div class="code-block">
-                            <code>https://your-site-name.netlify.app</code>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h3>Custom Domain (Optional)</h3>
-                        <p>Add your own domain in the "Domain settings" section. Netlify provides free HTTPS certificates automatically!</p>
-                        <div class="tips-box">
-                            <strong>🚀 Bonus:</strong> Set up form handling, serverless functions, and environment variables in Netlify's dashboard!
-                        </div>
-                    </div>
-                </div>
+                </main>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Supabase Tutorial Section -->
-    <section id="supabase" class="tutorial-section alt-bg">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Step 4</span>
-                <h2 class="section-title">Integrate Supabase</h2>
-                <p class="section-description">Add authentication, database, and real-time features to your app</p>
-            </div>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Create Supabase Account</h3>
-                        <p>Visit <a href="https://supabase.com" target="_blank">supabase.com</a> and sign up. Create a new project and note your API keys.</p>
-                    </div>
+        <!-- Community/Demo Page -->
+        <section id="community" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Community Board</h2>
+                    <p class="section-description">Connect with other learners and share your progress</p>
                 </div>
-
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Get Your Credentials</h3>
-                        <p>In your Supabase dashboard, go to Settings → API to find your:</p>
-                        <ul class="feature-list">
-                            <li>✓ Project URL</li>
-                            <li>✓ Anon/Public Key</li>
-                            <li>✓ Service Role Key (keep secret!)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Install Supabase Client</h3>
-                        <p>Add the Supabase JavaScript library to your project:</p>
-                        <div class="code-block">
-                            <code>&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;</code>
+                
+                <div class="demo-container">
+                    <div class="demo-card">
+                        <h3>Share Your Thoughts</h3>
+                        <div class="demo-form">
+                            <textarea id="messageInput" class="demo-textarea" placeholder="What are you learning today?" maxlength="200" rows="3"></textarea>
+                            <div class="demo-form-footer">
+                                <span class="char-count"><span id="charCount">0</span>/200</span>
+                                <button id="sendMessageBtn" class="btn btn-primary btn-small">Post Message</button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Initialize Supabase</h3>
-                        <p>Create a connection to your Supabase project:</p>
-                        <div class="code-block">
-                            <code>const supabaseUrl = 'YOUR_SUPABASE_URL'<br>const supabaseKey = 'YOUR_ANON_KEY'<br>const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)</code>
+                    <div class="demo-card">
+                        <div class="messages-header">
+                            <h3>Recent Messages</h3>
+                            <button id="refreshMessagesBtn" class="btn-icon">🔄</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h3>Create Your First Table</h3>
-                        <p>In the Supabase dashboard, go to Table Editor and create a new table. Example:</p>
-                        <div class="code-block">
-                            <code>Table: messages<br>Columns:<br>  - id (int8, primary key, auto-increment)<br>  - content (text)<br>  - created_at (timestamp)</code>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-number">6</div>
-                    <div class="step-content">
-                        <h3>Query Your Database</h3>
-                        <p>Use simple JavaScript to interact with your database:</p>
-                        <div class="code-block">
-                            <code>// Insert data<br>await supabase.from('messages').insert({ content: 'Hello!' })<br><br>// Read data<br>const { data } = await supabase.from('messages').select('*')</code>
-                        </div>
-                        <div class="tips-box">
-                            <strong>🔐 Security:</strong> Don't forget to set up Row Level Security (RLS) policies in Supabase for production apps!
+                        <div id="messagesList" class="messages-list">
+                            <div class="loading">Loading messages...</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Interactive Demo Section -->
-    <section id="demo" class="demo-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Live Demo</span>
-                <h2 class="section-title">Try It Yourself</h2>
-                <p class="section-description">Test the Supabase integration with this interactive message board</p>
-            </div>
-            
-            <div class="demo-container">
-                <div class="demo-card">
-                    <h3>Send a Message</h3>
-                    <div class="demo-form">
-                        <input type="text" id="messageInput" class="demo-input" placeholder="Type your message here..." maxlength="200">
-                        <button id="sendButton" class="btn btn-primary">Send Message</button>
-                    </div>
-                    <p class="demo-note">Messages are stored in a real Supabase database!</p>
-                </div>
-
-                <div class="demo-card">
-                    <h3>Recent Messages</h3>
-                    <div id="messagesList" class="messages-list">
-                        <div class="loading">Connect to Supabase to see messages...</div>
-                    </div>
-                    <button id="refreshButton" class="btn btn-secondary btn-small">Refresh</button>
-                </div>
-
-                <div class="demo-card setup-card">
-                    <h3>⚙️ Setup Instructions</h3>
-                    <ol class="setup-list">
-                        <li>Create a Supabase project</li>
-                        <li>Create a table named <code>messages</code> with columns: <code>id</code>, <code>content</code>, <code>created_at</code></li>
-                        <li>Add your credentials to <code>script.js</code></li>
-                        <li>Enable Row Level Security and add policies</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>AI Classroom</h4>
+                    <h4>🎓 AI Classroom</h4>
                     <p>Learn modern web development with AI-powered tools</p>
                 </div>
                 <div class="footer-section">
@@ -402,16 +267,33 @@
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h4>Contact</h4>
-                    <p>Created for educational purposes</p>
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#community">Community</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
                     <p>© 2025 AI Classroom</p>
+                    <p>Version 2.0.0</p>
                 </div>
             </div>
         </div>
     </footer>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="progress.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
-

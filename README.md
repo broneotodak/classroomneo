@@ -1,245 +1,329 @@
-# 🎓 AI Classroom - Full Stack Development Tutorial
+# 🎓 AI Classroom v2.0 - Full Stack Development Tutorial
 
-A comprehensive, interactive tutorial website that teaches students how to build, deploy, and scale modern web applications using **Cursor AI**, **GitHub**, **Netlify**, and **Supabase**.
+A comprehensive, interactive tutorial platform with **GitHub OAuth authentication** and **progress tracking** that teaches students how to build, deploy, and scale modern web applications using **Cursor AI**, **GitHub**, **Netlify**, and **Supabase**.
 
 ![AI Classroom](https://img.shields.io/badge/Tutorial-Full%20Stack-blue)
+![Version](https://img.shields.io/badge/Version-2.0-green)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## 🌟 What You'll Learn
+## 🌟 What's New in v2.0
 
-This project demonstrates a complete workflow from development to deployment:
+- ✅ **GitHub OAuth Authentication** - Sign in with your GitHub account
+- ✅ **User Progress Tracking** - Track completion across all modules
+- ✅ **Personalized Dashboard** - See your learning progress at a glance
+- ✅ **Step-by-Step Learning** - Structured curriculum with clear milestones
+- ✅ **Community Board** - Share your journey with other learners
+- ✅ **Real-time Updates** - Progress synced across devices
 
-1. **Cursor AI Setup** - Learn to use AI-powered coding tools
-2. **GitHub Integration** - Version control and collaboration
-3. **Netlify Deployment** - Continuous deployment and hosting
-4. **Supabase Integration** - Backend as a Service (BaaS)
+## 🎯 Features
 
-## 🚀 Live Demo
+### For Students
+- **Structured Learning Path** - Follow a clear, step-by-step curriculum
+- **Progress Tracking** - See exactly where you are in your journey
+- **Interactive Lessons** - Learn by doing with hands-on projects
+- **Time Estimates** - Know how long each section will take
+- **Resume Anytime** - Pick up exactly where you left off
 
-The demo includes an interactive message board powered by Supabase that demonstrates real-time database operations.
+### For Teachers
+- **Student Analytics** - Track student progress through Supabase dashboard
+- **Easy Content Management** - Update modules and steps in the database
+- **GitHub Integration** - Students build their developer portfolio
+- **Self-Paced Learning** - Students learn at their own speed
 
-## 📋 Prerequisites
+## 🚀 Quick Start
 
+### Prerequisites
+- A GitHub account
+- A Supabase account (free tier works great!)
 - Basic knowledge of HTML, CSS, and JavaScript
-- A computer with internet access
-- Willingness to learn!
 
-## 🛠️ Getting Started
+### Setup (5 minutes)
 
-### 1. Clone this Repository
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/broneotodak/classroomneo.git
+   cd classroomneo
+   ```
 
-```bash
-git clone https://github.com/yourusername/ClassroomNeo.git
-cd ClassroomNeo
-```
+2. **Set up Supabase**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Run the SQL script in `SUPABASE_SETUP.sql`
+   - Enable GitHub authentication
+   - Copy your project URL and anon key
 
-### 2. Set Up Supabase (Optional for Demo)
+3. **Configure the app**
+   - Open `config.js`
+   - Add your Supabase URL and anon key
 
-To enable the interactive demo:
+4. **Test locally**
+   ```bash
+   python3 -m http.server 8000
+   ```
+   Visit `http://localhost:8000`
 
-1. Create a free account at [supabase.com](https://supabase.com)
-2. Create a new project
-3. In the SQL Editor, run this query:
-
-```sql
--- Create messages table
-CREATE TABLE messages (
-  id BIGSERIAL PRIMARY KEY,
-  content TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
--- Create policy to allow anyone to read messages
-CREATE POLICY "Allow public read access" ON messages
-  FOR SELECT
-  USING (true);
-
--- Create policy to allow anyone to insert messages
-CREATE POLICY "Allow public insert access" ON messages
-  FOR INSERT
-  WITH CHECK (true);
-```
-
-4. Get your API credentials from Settings → API
-5. Update `script.js` with your credentials:
-
-```javascript
-const SUPABASE_URL = 'your-project-url';
-const SUPABASE_ANON_KEY = 'your-anon-key';
-```
-
-### 3. Test Locally
-
-Simply open `index.html` in your web browser, or use a local server:
-
-```bash
-# Using Python
-python -m http.server 8000
-
-# Using Node.js (with http-server)
-npx http-server
-
-# Using PHP
-php -S localhost:8000
-```
-
-Then visit `http://localhost:8000`
-
-## 🌐 Deploy to Netlify
-
-### Option 1: Deploy via Git (Recommended)
-
-1. Push your code to GitHub
-2. Go to [netlify.com](https://netlify.com) and sign in
-3. Click "Add new site" → "Import an existing project"
-4. Select your GitHub repository
-5. Configure build settings:
-   - Build command: (leave empty)
-   - Publish directory: `.` (or root)
-6. Click "Deploy site"
-
-### Option 2: Drag and Drop
-
-1. Go to [netlify.com](https://netlify.com)
-2. Drag your project folder onto the deploy area
-3. Your site will be live in seconds!
-
-### Environment Variables (if using Supabase)
-
-In Netlify dashboard:
-1. Go to Site settings → Environment variables
-2. Add your Supabase credentials (optional, for future server-side features)
+For detailed setup instructions, see **[AUTH_SETUP.md](AUTH_SETUP.md)**
 
 ## 📁 Project Structure
 
 ```
 ClassroomNeo/
-├── index.html          # Main HTML file with all sections
-├── styles.css          # Complete styling with responsive design
-├── script.js           # JavaScript for interactivity and Supabase
-├── README.md           # This file
-├── netlify.toml        # Netlify configuration
-└── .gitignore          # Git ignore file
+├── index.html              # Main application HTML
+├── styles.css              # Complete styling
+├── config.js               # Configuration (add your credentials here)
+├── auth.js                 # Authentication manager
+├── progress.js             # Progress tracking manager
+├── app.js                  # Main application logic
+├── SUPABASE_SETUP.sql      # Database schema and initial data
+├── AUTH_SETUP.md           # Complete authentication setup guide
+├── README.md               # This file
+├── netlify.toml            # Netlify configuration
+└── .gitignore              # Git ignore rules
 ```
 
-## 🎨 Features
+## 📚 Learning Modules
 
-- **Responsive Design** - Works on desktop, tablet, and mobile
-- **Smooth Scrolling** - Navigate seamlessly between sections
-- **Interactive Demo** - Real-time message board with Supabase
-- **Modern UI** - Beautiful gradients and animations
-- **Step-by-Step Tutorials** - Clear instructions for each tool
-- **Copy-Paste Ready** - Code examples you can use immediately
+### 1. Cursor AI Setup (45 min)
+Learn to install and use the AI-powered code editor
+- Download and install Cursor
+- Configure AI features
+- Create your first project
+- Master keyboard shortcuts
 
-## 📖 Tutorial Sections
+### 2. GitHub Integration (60 min)
+Master version control and collaboration
+- Create GitHub account
+- Install and configure Git
+- Create repositories
+- Push code to GitHub
+- Collaboration workflows
 
-### 1. Cursor AI
-- Installation and setup
-- AI-powered features
-- Keyboard shortcuts
-- Best practices
-
-### 2. GitHub
-- Creating repositories
-- Version control basics
-- Pushing code
-- Collaboration tips
-
-### 3. Netlify
-- Continuous deployment
+### 3. Netlify Deployment (45 min)
+Deploy your website with continuous deployment
+- Sign up for Netlify
+- Connect GitHub repository
+- Configure build settings
+- Deploy your site
 - Custom domains
-- Environment variables
-- Form handling
 
-### 4. Supabase
-- Database setup
+### 4. Supabase Backend (90 min)
+Build a full-stack app with backend services
+- Create Supabase project
+- Design database schema
+- Set up authentication
+- Query your database
 - Real-time features
-- Authentication (coming soon)
 - Row Level Security
 
-## 🔐 Security Notes
+## 🗄️ Database Schema
 
-- Never commit API keys to GitHub
-- Use environment variables for sensitive data
-- Enable Row Level Security in Supabase
-- Use the anon key only for public operations
+The platform uses Supabase (PostgreSQL) with the following tables:
+
+- **`users_profile`** - Extended user information
+- **`modules`** - Learning modules
+- **`steps`** - Individual learning steps
+- **`user_progress`** - Progress tracking per user
+- **`messages`** - Community message board
+
+All tables have Row Level Security (RLS) enabled for data protection.
+
+## 🔐 Authentication Flow
+
+1. User clicks "Sign in with GitHub"
+2. Redirected to GitHub OAuth authorization
+3. GitHub returns user to Supabase callback
+4. Supabase creates user session
+5. User profile automatically created via database trigger
+6. User redirected to dashboard with active session
+
+## 🎨 UI/UX Features
+
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Modern Interface** - Clean, professional design
+- **Smooth Animations** - Polished user experience
+- **Progress Indicators** - Visual feedback on completion
+- **Intuitive Navigation** - Easy to find and access content
+- **Dark Mode Ready** - Color variables for easy theming
+
+## 🌐 Deployment
+
+### Deploy to Netlify
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Deploy AI Classroom"
+   git push origin main
+   ```
+
+2. **Connect to Netlify**
+   - Go to [netlify.com](https://netlify.com)
+   - Import your GitHub repository
+   - Deploy!
+
+3. **Update GitHub OAuth**
+   - Add your Netlify URL to GitHub OAuth app
+   - Update callback URLs
+
+See [AUTH_SETUP.md](AUTH_SETUP.md) for complete deployment instructions.
+
+## 🔒 Security
+
+### Best Practices Implemented
+- ✅ Row Level Security (RLS) on all tables
+- ✅ Secure authentication via Supabase Auth
+- ✅ OAuth tokens never exposed to client
+- ✅ API keys properly scoped (using anon key)
+- ✅ Input validation and sanitization
+- ✅ SQL injection protection via Supabase client
+
+### What to Protect
+- ⚠️ Never commit `service_role` key to Git
+- ⚠️ Always use `anon` key in frontend code
+- ⚠️ Keep RLS policies strict and tested
+- ⚠️ Validate user input before database operations
+
+## 🎓 For Teachers
+
+### Customizing Content
+
+1. **Add/Edit Modules**
+   ```sql
+   INSERT INTO modules (slug, title, description, order_number)
+   VALUES ('new-module', 'New Module', 'Description', 5);
+   ```
+
+2. **Add/Edit Steps**
+   ```sql
+   INSERT INTO steps (module_id, slug, title, order_number, estimated_minutes)
+   VALUES (1, 'new-step', 'New Step', 5, 15);
+   ```
+
+3. **View Student Progress**
+   - Use the `user_progress_summary` view in Supabase
+   - Export data for analytics
+   - Track completion rates
+
+### Analytics Queries
+
+**See overall completion rates:**
+```sql
+SELECT 
+  m.title,
+  COUNT(DISTINCT up.user_id) as students_started,
+  COUNT(CASE WHEN up.status = 'completed' THEN 1 END) as completions
+FROM modules m
+LEFT JOIN user_progress up ON up.module_id = m.id
+GROUP BY m.id, m.title;
+```
+
+**See individual student progress:**
+```sql
+SELECT 
+  u.email,
+  m.title as module,
+  COUNT(s.id) as total_steps,
+  COUNT(CASE WHEN up.status = 'completed' THEN 1 END) as completed
+FROM users_profile u
+CROSS JOIN modules m
+LEFT JOIN steps s ON s.module_id = m.id
+LEFT JOIN user_progress up ON up.user_id = u.id AND up.step_id = s.id
+GROUP BY u.id, u.email, m.id, m.title;
+```
 
 ## 🤝 Contributing
 
-This is an educational project. Feel free to:
-- Fork the repository
-- Make improvements
-- Submit pull requests
-- Share with students
+This is an educational project designed for teaching. Feel free to:
+- Fork and modify for your own classes
+- Submit improvements via pull requests
+- Share feedback and suggestions
+- Report bugs or issues
 
-## 📚 Additional Resources
+## 📖 Additional Resources
 
 - [Cursor Documentation](https://cursor.sh/docs)
 - [GitHub Guides](https://guides.github.com/)
 - [Netlify Documentation](https://docs.netlify.com/)
 - [Supabase Documentation](https://supabase.com/docs)
+- [Supabase Auth Guide](https://supabase.com/docs/guides/auth)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"Supabase not configured"**
+- Check that `config.js` has your credentials
+- Verify credentials are correct
+
+**"redirect_uri_mismatch"**
+- Update GitHub OAuth callback URL
+- Make sure it matches Supabase callback exactly
+
+**Progress not saving**
+- Check browser console for errors
+- Verify you're signed in
+- Check RLS policies in Supabase
+
+**Can't sign in**
+- Verify GitHub OAuth app is configured
+- Check that redirect URLs are correct
+- Ensure Supabase GitHub provider is enabled
+
+See [AUTH_SETUP.md](AUTH_SETUP.md) for detailed troubleshooting.
+
+## 📊 Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| **Vanilla JS** | No framework dependencies, easy to understand |
+| **Supabase** | Authentication, database, real-time updates |
+| **GitHub OAuth** | Secure authentication via GitHub |
+| **Netlify** | Hosting and continuous deployment |
+| **PostgreSQL** | Relational database via Supabase |
 
 ## 📝 License
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## 👨‍🏫 For Teachers
-
-This project is designed to be:
-- **Self-contained** - Students can learn at their own pace
-- **Hands-on** - Real deployments, not just theory
-- **Modern** - Uses current industry tools
-- **Free** - All services have generous free tiers
-
-### Suggested Curriculum
-
-1. **Week 1** - Cursor setup and basic web development
-2. **Week 2** - Git and GitHub fundamentals
-3. **Week 3** - Netlify deployment and CI/CD
-4. **Week 4** - Supabase and database integration
-
-## 🆘 Troubleshooting
-
-### Supabase Connection Issues
-- Check your URL and API key
-- Verify Row Level Security policies
-- Check browser console for errors
-
-### Netlify Build Failures
-- Ensure all files are committed to Git
-- Check build logs for specific errors
-- Verify file paths are correct
-
-### CORS Errors
-- Make sure Supabase URL is correct
-- Check that RLS policies allow your operations
-
 ## 🎯 Learning Outcomes
 
-After completing this tutorial, students will be able to:
-- ✅ Use AI to accelerate development
+After completing AI Classroom, students will be able to:
+- ✅ Use AI-powered tools to accelerate development
 - ✅ Manage code with Git and GitHub
-- ✅ Deploy websites automatically with Netlify
-- ✅ Build full-stack applications with Supabase
-- ✅ Understand modern development workflows
+- ✅ Deploy websites automatically with CI/CD
+- ✅ Build full-stack applications with authentication
+- ✅ Design and implement database schemas
+- ✅ Implement user authentication and authorization
+- ✅ Track user data and analytics
+- ✅ Follow security best practices
 
-## 💡 Next Steps
+## 🚀 Roadmap
 
-Want to extend this project? Try:
-- Adding user authentication with Supabase Auth
-- Implementing file uploads with Supabase Storage
-- Creating a REST API with Supabase Edge Functions
-- Adding real-time chat functionality
-- Building a blog or portfolio site
+Planned features for future versions:
+- [ ] Code editor integration for in-browser coding
+- [ ] Automated code submission and review
+- [ ] Badges and achievements system
+- [ ] Leaderboards and challenges
+- [ ] Video tutorial integration
+- [ ] Multi-language support
+- [ ] Mobile app version
 
-## 📧 Contact
+## 💡 Philosophy
 
-Created for educational purposes. Happy learning! 🚀
+AI Classroom is built on these principles:
+1. **Learn by Doing** - Hands-on practice, not just theory
+2. **Real Tools** - Use industry-standard tools
+3. **Progressive Complexity** - Start simple, build up gradually
+4. **Track Progress** - Know where you are and where you're going
+5. **Build Portfolio** - Every project adds to your GitHub profile
+
+## 📧 Contact & Support
+
+- **Project Repository**: [github.com/broneotodak/classroomneo](https://github.com/broneotodak/classroomneo)
+- **Issues**: Use GitHub Issues for bug reports
+- **Discussions**: Use GitHub Discussions for questions
 
 ---
 
-**Note**: This is a teaching tool. For production applications, implement proper security measures and follow best practices.
+**Built with ❤️ for educators and students learning full-stack development**
 
+Version 2.0.0 - Now with user authentication and progress tracking!
