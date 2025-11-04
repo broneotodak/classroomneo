@@ -64,48 +64,50 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Insert default modules
+-- 6. Insert default modules (NEW ORDER: GitHub → Cursor → Supabase → Netlify)
 INSERT INTO modules (slug, title, description, order_number) VALUES
-  ('cursor', 'Cursor AI Setup', 'Learn to install and use Cursor AI-powered code editor', 1),
-  ('github', 'GitHub Integration', 'Master version control and collaboration with GitHub', 2),
-  ('netlify', 'Netlify Deployment', 'Deploy your website with continuous deployment', 3),
-  ('supabase', 'Supabase Backend', 'Build a full-stack app with Supabase', 4)
+  ('github-signup', 'GitHub Account Setup', 'Create your GitHub account - your gateway to modern development', 1),
+  ('cursor', 'Cursor AI Setup', 'Download and set up Cursor AI-powered code editor', 2),
+  ('supabase', 'Supabase Backend', 'Set up your backend with Supabase authentication and database', 3),
+  ('netlify', 'Netlify Deployment', 'Deploy your website with continuous deployment', 4)
 ON CONFLICT (slug) DO NOTHING;
 
--- 7. Insert steps for Cursor module
+-- 7. Insert steps for GitHub Signup module (Module 1)
 INSERT INTO steps (module_id, slug, title, order_number, estimated_minutes) VALUES
-  (1, 'download', 'Download Cursor', 1, 5),
-  (1, 'install', 'Install and Launch', 2, 10),
-  (1, 'configure', 'Configure AI Features', 3, 15),
-  (1, 'first-project', 'Create Your First Project', 4, 20)
+  (1, 'why-github', 'Why GitHub Matters', 1, 3),
+  (1, 'create-account', 'Create Your GitHub Account', 2, 5),
+  (1, 'setup-profile', 'Set Up Your Profile', 3, 5),
+  (1, 'enable-2fa', 'Enable Two-Factor Authentication', 4, 7),
+  (1, 'explore-github', 'Explore GitHub Features', 5, 10)
 ON CONFLICT (module_id, slug) DO NOTHING;
 
--- 8. Insert steps for GitHub module
+-- 8. Insert steps for Cursor module (Module 2)
 INSERT INTO steps (module_id, slug, title, order_number, estimated_minutes) VALUES
-  (2, 'account', 'Create GitHub Account', 1, 5),
-  (2, 'install-git', 'Install Git', 2, 10),
-  (2, 'configure-git', 'Configure Git', 3, 5),
-  (2, 'create-repo', 'Create a Repository', 4, 10),
-  (2, 'push-code', 'Push to GitHub', 5, 15)
+  (2, 'download', 'Download Cursor', 1, 5),
+  (2, 'install', 'Install and Launch', 2, 10),
+  (2, 'signin', 'Sign In with GitHub', 3, 5),
+  (2, 'configure', 'Configure AI Features', 4, 15),
+  (2, 'first-project', 'Create Your First Project', 5, 20)
 ON CONFLICT (module_id, slug) DO NOTHING;
 
--- 9. Insert steps for Netlify module
+-- 9. Insert steps for Supabase module (Module 3)
 INSERT INTO steps (module_id, slug, title, order_number, estimated_minutes) VALUES
-  (3, 'signup', 'Sign Up for Netlify', 1, 5),
-  (3, 'connect-repo', 'Connect Your Repository', 2, 10),
-  (3, 'configure-build', 'Configure Build Settings', 3, 10),
-  (3, 'deploy', 'Deploy Your Site', 4, 10),
-  (3, 'custom-domain', 'Custom Domain (Optional)', 5, 15)
+  (3, 'account', 'Create Supabase Account with GitHub', 1, 5),
+  (3, 'project', 'Create New Project', 2, 10),
+  (3, 'github-auth', 'Enable GitHub Authentication', 3, 10),
+  (3, 'table', 'Create Your First Table', 4, 15),
+  (3, 'credentials', 'Get API Credentials', 5, 5),
+  (3, 'initialize', 'Initialize Supabase Client', 6, 10),
+  (3, 'query', 'Query Your Database', 7, 20)
 ON CONFLICT (module_id, slug) DO NOTHING;
 
--- 10. Insert steps for Supabase module
+-- 10. Insert steps for Netlify module (Module 4)
 INSERT INTO steps (module_id, slug, title, order_number, estimated_minutes) VALUES
-  (4, 'account', 'Create Supabase Account', 1, 5),
-  (4, 'project', 'Create New Project', 2, 10),
-  (4, 'table', 'Create Your First Table', 3, 15),
-  (4, 'credentials', 'Get API Credentials', 4, 5),
-  (4, 'initialize', 'Initialize Supabase Client', 5, 10),
-  (4, 'query', 'Query Your Database', 6, 20)
+  (4, 'signup', 'Sign Up for Netlify with GitHub', 1, 5),
+  (4, 'connect-repo', 'Connect Your GitHub Repository', 2, 10),
+  (4, 'configure-build', 'Configure Build Settings', 3, 10),
+  (4, 'deploy', 'Deploy Your Site', 4, 10),
+  (4, 'custom-domain', 'Custom Domain (Optional)', 5, 15)
 ON CONFLICT (module_id, slug) DO NOTHING;
 
 -- ==========================================

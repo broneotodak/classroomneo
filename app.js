@@ -117,6 +117,10 @@ class AIClassroom {
 
   // Set up event listeners
   setupEventListeners() {
+    // Dark mode toggle
+    this.initDarkMode();
+    document.getElementById('darkModeToggle')?.addEventListener('click', () => this.toggleDarkMode());
+    
     // Auth buttons
     document.getElementById('loginBtn')?.addEventListener('click', () => this.handleLogin());
     document.getElementById('logoutBtn')?.addEventListener('click', () => this.handleLogout());
@@ -615,6 +619,30 @@ class AIClassroom {
 
   showError(message) {
     alert(message);
+  }
+
+  // Dark mode functionality
+  initDarkMode() {
+    // Check localStorage for saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    this.updateDarkModeIcon(savedTheme);
+  }
+
+  toggleDarkMode() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    this.updateDarkModeIcon(newTheme);
+  }
+
+  updateDarkModeIcon(theme) {
+    const icon = document.querySelector('.theme-icon');
+    if (icon) {
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
   }
 }
 
