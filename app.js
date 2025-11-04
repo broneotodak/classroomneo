@@ -1424,7 +1424,7 @@ class AIClassroom {
     if (isTrainer) {
       return this.renderTrainerAssignmentView(assignment, stepId);
     } else {
-      return this.renderStudentAssignmentView(assignment, submission, grade);
+      return this.renderStudentAssignmentView(assignment, submission, grade, stepId);
     }
   }
 
@@ -1451,7 +1451,7 @@ class AIClassroom {
     `;
   }
 
-  async renderStudentAssignmentView(assignment, submission, grade) {
+  async renderStudentAssignmentView(assignment, submission, grade, stepId) {
     if (grade) {
       // Show grade and feedback
       return `
@@ -1569,7 +1569,7 @@ class AIClassroom {
                         placeholder="Add any notes about your submission..."></textarea>
             </div>
 
-            <button class="btn btn-primary" onclick="app.submitAssignment(${assignment.id}, ${step.id})">
+            <button class="btn btn-primary" onclick="app.submitAssignment(${assignment.id}, ${stepId})">
               🚀 Submit Assignment
             </button>
           </div>
