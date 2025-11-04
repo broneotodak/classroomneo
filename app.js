@@ -68,6 +68,9 @@ class AIClassroom {
       // Update user UI
       await this.updateUserUI();
 
+      // Check if user is admin/trainer and show admin tab
+      await this.checkAdminStatus();
+
       // Load data
       await this.loadUserData();
     } else {
@@ -75,9 +78,30 @@ class AIClassroom {
       navLoggedOut.style.display = 'flex';
 
       // Redirect to home if on protected page
-      if (['dashboard', 'learning', 'progress'].includes(this.currentPage)) {
+      if (['dashboard', 'learning', 'progress', 'admin'].includes(this.currentPage)) {
         this.navigateTo('home');
       }
+    }
+  }
+
+  // Check if user is admin or trainer
+  async checkAdminStatus() {
+    if (!this.auth.isAuthenticated()) return false;
+
+    try {
+      const profile = await this.auth.getUserProfile();
+      const isAdmin = profile && (profile.role === 'admin' || profile.role === 'trainer');
+      
+      // Show/hide admin nav link
+      const adminNavLink = document.getElementById('adminNavLink');
+      if (adminNavLink) {
+        adminNavLink.style.display = isAdmin ? 'block' : 'none';
+      }
+
+      return isAdmin;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
     }
   }
 
@@ -156,6 +180,11 @@ class AIClassroom {
       document.getElementById('charCount').textContent = e.target.value.length;
     });
 
+    // Admin dashboard
+    document.getElementById('refreshRosterBtn')?.addEventListener('click', () => this.loadStudentRoster());
+    document.getElementById('searchStudents')?.addEventListener('input', (e) => this.filterStudents(e.target.value));
+    document.getElementById('classFilter')?.addEventListener('change', (e) => this.filterByClass(e.target.value));
+
     // Handle browser back/forward
     window.addEventListener('popstate', () => this.handleRoute());
   }
@@ -201,6 +230,8 @@ class AIClassroom {
         this.renderLearning(params);
       } else if (page === 'community') {
         this.loadMessages();
+      } else if (page === 'admin') {
+        await this.renderAdminDashboard();
       }
 
       // Scroll to top
@@ -619,6 +650,173 @@ class AIClassroom {
 
   showError(message) {
     alert(message);
+  }
+
+  // ==========================================
+  // ADMIN DASHBOARD FUNCTIONS
+  // ==========================================
+
+  async renderAdminDashboard() {
+    // Check if user is admin
+    const isAdmin = await this.checkAdminStatus();
+    if (!isAdmin) {
+      alert('Access denied. Admin privileges required.');
+      this.navigateTo('dashboard');
+      return;
+    }
+
+    await this.loadStudentRoster();
+    await this.loadAdminStats();
+  }
+
+  async loadAdminStats() {
+    try {
+      // Get all students
+      const { data: students, error } = await this.supabase
+        .from('admin_student_roster')
+        .select('*');
+
+      if (error) throw error;
+
+      // Calculate stats
+      const totalStudents = students ? students.length : 0;
+      const avgCompletion = students && students.length > 0
+        ? Math.round(students.reduce((sum, s) => sum + (s.overall_completion_percentage || 0), 0) / students.length)
+        : 0;
+
+      // Get active classes
+      const { data: classes } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('is_active', true);
+
+      const activeClasses = classes ? classes.length : 0;
+
+      // Get active this week (last login within 7 days)
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const activeThisWeek = students
+        ? students.filter(s => new Date(s.last_login) > weekAgo).length
+        : 0;
+
+      // Update UI
+      document.getElementById('totalStudents').textContent = totalStudents;
+      document.getElementById('activeClasses').textContent = activeClasses;
+      document.getElementById('avgCompletion').textContent = `${avgCompletion}%`;
+      document.getElementById('activeThisWeek').textContent = activeThisWeek;
+    } catch (error) {
+      console.error('Error loading admin stats:', error);
+    }
+  }
+
+  async loadStudentRoster() {
+    const container = document.getElementById('studentRoster');
+    if (!container) return;
+
+    try {
+      container.innerHTML = '<div class="loading">Loading students...</div>';
+
+      const { data: students, error } = await this.supabase
+        .from('admin_student_roster')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!students || students.length === 0) {
+        container.innerHTML = '<div class="loading">No students enrolled yet.</div>';
+        return;
+      }
+
+      // Store for filtering
+      this.allStudents = students;
+
+      // Render table
+      this.renderStudentTable(students);
+    } catch (error) {
+      console.error('Error loading student roster:', error);
+      container.innerHTML = '<div class="error">Failed to load student roster.</div>';
+    }
+  }
+
+  renderStudentTable(students) {
+    const container = document.getElementById('studentRoster');
+    if (!students || students.length === 0) {
+      container.innerHTML = '<div class="loading">No students match your filters.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Progress</th>
+            <th>Steps Completed</th>
+            <th>Last Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map(student => `
+            <tr>
+              <td>
+                <div class="student-info">
+                  <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.github_username || 'User')}" 
+                       alt="${student.github_username}" 
+                       class="student-avatar">
+                  <div class="student-details">
+                    <div class="student-name">${this.escapeHtml(student.github_username || student.full_name || 'Unknown')}</div>
+                    <div class="student-email">${this.escapeHtml(student.email || '')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${student.class_name ? `<span class="role-badge role-student">${this.escapeHtml(student.class_name)}</span>` : '<span class="text-secondary">Not assigned</span>'}
+              </td>
+              <td>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${student.overall_completion_percentage || 0}%"></div>
+                </div>
+                <div class="progress-text">${student.overall_completion_percentage || 0}%</div>
+              </td>
+              <td>${student.steps_completed || 0} / ${student.total_steps_started || 0}</td>
+              <td>${this.formatDate(student.last_login)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  filterStudents(searchTerm) {
+    if (!this.allStudents) return;
+
+    const filtered = this.allStudents.filter(student => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        (student.github_username || '').toLowerCase().includes(searchLower) ||
+        (student.email || '').toLowerCase().includes(searchLower) ||
+        (student.full_name || '').toLowerCase().includes(searchLower)
+      );
+    });
+
+    this.renderStudentTable(filtered);
+  }
+
+  filterByClass(classId) {
+    if (!this.allStudents) return;
+
+    if (!classId) {
+      this.renderStudentTable(this.allStudents);
+      return;
+    }
+
+    const filtered = this.allStudents.filter(student => 
+      student.class_id && student.class_id.toString() === classId
+    );
+
+    this.renderStudentTable(filtered);
   }
 
   // Dark mode functionality

@@ -10,9 +10,33 @@ CREATE TABLE IF NOT EXISTS users_profile (
   github_avatar_url TEXT,
   full_name TEXT,
   email TEXT,
+  role TEXT DEFAULT 'student' CHECK (role IN ('student', 'trainer', 'admin')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   last_login TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 1b. Create classes table
+CREATE TABLE IF NOT EXISTS classes (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  trainer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  start_date DATE,
+  end_date DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 1c. Create class_enrollments table (students in classes)
+CREATE TABLE IF NOT EXISTS class_enrollments (
+  id SERIAL PRIMARY KEY,
+  class_id INTEGER REFERENCES classes(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'dropped')),
+  UNIQUE(class_id, student_id)
 );
 
 -- 2. Create modules table
@@ -116,6 +140,8 @@ ON CONFLICT (module_id, slug) DO NOTHING;
 
 -- Enable RLS on all tables
 ALTER TABLE users_profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE class_enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE modules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
@@ -125,11 +151,73 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own profile" ON users_profile
   FOR SELECT USING (auth.uid() = id);
 
+CREATE POLICY "Trainers and admins can view all profiles" ON users_profile
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role IN ('trainer', 'admin')
+    )
+  );
+
 CREATE POLICY "Users can update their own profile" ON users_profile
   FOR UPDATE USING (auth.uid() = id);
 
+CREATE POLICY "Admins can update any profile" ON users_profile
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
 CREATE POLICY "Users can insert their own profile" ON users_profile
   FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Classes Policies
+CREATE POLICY "Anyone can view active classes" ON classes
+  FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Trainers and admins can create classes" ON classes
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role IN ('trainer', 'admin')
+    )
+  );
+
+CREATE POLICY "Trainers can update their own classes" ON classes
+  FOR UPDATE USING (
+    trainer_id = auth.uid() OR
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Class Enrollments Policies
+CREATE POLICY "Students can view their own enrollments" ON class_enrollments
+  FOR SELECT USING (student_id = auth.uid());
+
+CREATE POLICY "Trainers can view enrollments in their classes" ON class_enrollments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM classes 
+      WHERE id = class_enrollments.class_id 
+      AND trainer_id = auth.uid()
+    ) OR
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+CREATE POLICY "Trainers and admins can enroll students" ON class_enrollments
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM users_profile 
+      WHERE id = auth.uid() AND role IN ('trainer', 'admin')
+    )
+  );
 
 -- Modules Policies (public read)
 CREATE POLICY "Anyone can view active modules" ON modules
@@ -248,6 +336,36 @@ ORDER BY m.order_number;
 
 -- Grant access to the view
 GRANT SELECT ON user_progress_summary TO authenticated;
+
+-- View for admin dashboard - student roster with progress
+CREATE OR REPLACE VIEW admin_student_roster AS
+SELECT 
+  u.id,
+  u.github_username,
+  u.github_avatar_url,
+  u.email,
+  u.full_name,
+  u.role,
+  u.created_at,
+  u.last_login,
+  ce.class_id,
+  c.name as class_name,
+  COUNT(DISTINCT up.id) as total_steps_started,
+  COUNT(DISTINCT CASE WHEN up.status = 'completed' THEN up.id END) as steps_completed,
+  ROUND(
+    (COUNT(DISTINCT CASE WHEN up.status = 'completed' THEN up.id END)::NUMERIC / 
+     NULLIF(COUNT(DISTINCT s.id), 0)) * 100,
+    2
+  ) as overall_completion_percentage
+FROM users_profile u
+LEFT JOIN class_enrollments ce ON ce.student_id = u.id AND ce.status = 'active'
+LEFT JOIN classes c ON c.id = ce.class_id
+LEFT JOIN user_progress up ON up.user_id = u.id
+LEFT JOIN steps s ON s.id = up.step_id
+WHERE u.role = 'student'
+GROUP BY u.id, u.github_username, u.github_avatar_url, u.email, u.full_name, u.role, u.created_at, u.last_login, ce.class_id, c.name;
+
+GRANT SELECT ON admin_student_roster TO authenticated;
 
 -- ==========================================
 -- SAMPLE DATA (Optional - for testing)

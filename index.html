@@ -36,6 +36,9 @@
                 <!-- Logged in state -->
                 <div id="navLoggedIn" class="nav-auth" style="display: none;">
                     <a href="#dashboard" class="nav-link">Dashboard</a>
+                    <a href="#admin" class="nav-link" id="adminNavLink" style="display: none;">
+                        <span class="admin-badge">👨‍🏫 Admin</span>
+                    </a>
                     <div class="user-menu">
                         <button class="user-menu-btn" id="userMenuBtn">
                             <img id="userAvatar" src="" alt="User" class="user-avatar">
@@ -226,6 +229,75 @@
                         <div class="loading">Select a step to begin...</div>
                     </div>
                 </main>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard Page -->
+        <section id="admin" class="page-section">
+            <div class="container">
+                <div class="admin-header">
+                    <h1>👨‍🏫 Admin Dashboard</h1>
+                    <p class="admin-subtitle">Manage classes and track student progress</p>
+                </div>
+
+                <!-- Admin Stats -->
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Students</div>
+                            <div class="stat-value" id="totalStudents">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Active Classes</div>
+                            <div class="stat-value" id="activeClasses">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Avg. Completion</div>
+                            <div class="stat-value" id="avgCompletion">0%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Active This Week</div>
+                            <div class="stat-value" id="activeThisWeek">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Roster -->
+                <div class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>Student Roster</h2>
+                        <button class="btn btn-primary btn-small" id="refreshRosterBtn">🔄 Refresh</button>
+                    </div>
+                    <div class="roster-filters">
+                        <select id="classFilter" class="filter-select">
+                            <option value="">All Classes</option>
+                        </select>
+                        <input type="text" id="searchStudents" class="filter-input" placeholder="Search students...">
+                    </div>
+                    <div id="studentRoster" class="student-roster">
+                        <div class="loading">Loading students...</div>
+                    </div>
+                </div>
+
+                <!-- Classes Management (Coming Soon) -->
+                <div class="admin-section">
+                    <h2>Classes Management</h2>
+                    <div class="coming-soon-card">
+                        <div class="coming-soon-icon">🚧</div>
+                        <h3>Coming Soon</h3>
+                        <p>Class creation, management, and student enrollment features will be available here</p>
+                    </div>
+                </div>
             </div>
         </section>
 
