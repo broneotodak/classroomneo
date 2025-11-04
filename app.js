@@ -191,6 +191,11 @@ class AIClassroom {
     document.getElementById('cancelCreateClass')?.addEventListener('click', () => this.hideModal('createClassModal'));
     document.getElementById('submitCreateClass')?.addEventListener('click', () => this.handleCreateClass());
     
+    // Edit class modal
+    document.getElementById('closeEditClassModal')?.addEventListener('click', () => this.hideModal('editClassModal'));
+    document.getElementById('cancelEditClass')?.addEventListener('click', () => this.hideModal('editClassModal'));
+    document.getElementById('submitEditClass')?.addEventListener('click', () => this.handleEditClass());
+    
     // Manage students modal
     document.getElementById('closeManageStudentsModal')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
     document.getElementById('closeManageStudents')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
@@ -1155,7 +1160,73 @@ class AIClassroom {
   }
 
   async editClass(classId) {
-    alert('Edit class feature coming soon! For now, you can edit directly in Supabase Table Editor.');
+    // Load class data
+    try {
+      const { data: classData, error } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('id', classId)
+        .single();
+
+      if (error) throw error;
+
+      if (!classData) {
+        alert('Class not found');
+        return;
+      }
+
+      // Populate form
+      document.getElementById('editClassId').value = classData.id;
+      document.getElementById('editClassName').value = classData.name || '';
+      document.getElementById('editClassDescription').value = classData.description || '';
+      document.getElementById('editStartDate').value = classData.start_date || '';
+      document.getElementById('editEndDate').value = classData.end_date || '';
+      document.getElementById('editIsActive').checked = classData.is_active;
+
+      // Show modal
+      this.showModal('editClassModal');
+    } catch (error) {
+      console.error('Error loading class for edit:', error);
+      alert('Failed to load class data. Please try again.');
+    }
+  }
+
+  async handleEditClass() {
+    const classId = document.getElementById('editClassId').value;
+    const name = document.getElementById('editClassName').value.trim();
+    const description = document.getElementById('editClassDescription').value.trim();
+    const startDate = document.getElementById('editStartDate').value;
+    const endDate = document.getElementById('editEndDate').value;
+    const isActive = document.getElementById('editIsActive').checked;
+
+    if (!name) {
+      alert('Please enter a class name');
+      return;
+    }
+
+    try {
+      const { error } = await this.supabase
+        .from('classes')
+        .update({
+          name: name,
+          description: description || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          is_active: isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', classId);
+
+      if (error) throw error;
+
+      alert('✅ Class updated successfully!');
+      this.hideModal('editClassModal');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error updating class:', error);
+      alert('Failed to update class. Please try again.');
+    }
   }
 
   async deleteClass(classId) {

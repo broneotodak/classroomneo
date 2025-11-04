@@ -431,6 +431,49 @@
         </div>
     </div>
 
+    <!-- Edit Class Modal -->
+    <div id="editClassModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Edit Class</h2>
+                <button class="modal-close" id="closeEditClassModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editClassForm">
+                    <input type="hidden" id="editClassId">
+                    <div class="form-group">
+                        <label for="editClassName">Class Name *</label>
+                        <input type="text" id="editClassName" class="form-input" placeholder="e.g., Web Dev Bootcamp 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editClassDescription">Description</label>
+                        <textarea id="editClassDescription" class="form-textarea" rows="3" placeholder="Brief description of the class..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editStartDate">Start Date</label>
+                            <input type="date" id="editStartDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEndDate">End Date</label>
+                            <input type="date" id="editEndDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="editIsActive">
+                            <span>Active (students can enroll)</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelEditClass">Cancel</button>
+                <button class="btn btn-primary" id="submitEditClass">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AI Module Builder Modal -->
     <div id="aiModuleBuilderModal" class="modal">
         <div class="modal-content modal-large">
