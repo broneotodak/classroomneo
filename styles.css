@@ -2179,3 +2179,313 @@ body {
     background: var(--card-bg);
 }
 
+/* ========================================== 
+   ASSIGNMENTS & GRADING
+   ========================================== */
+
+.assignment-badge {
+    background: var(--warning-color);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.assignment-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--light-bg);
+    border-radius: 1rem;
+    border: 2px solid var(--border-color);
+}
+
+.assignment-section.graded {
+    border-color: var(--success-color);
+    background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), var(--light-bg));
+}
+
+.assignment-section.pending {
+    border-color: var(--warning-color);
+}
+
+.assignment-section.unsubmitted {
+    border-color: var(--primary-color);
+}
+
+.assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.assignment-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.assignment-required {
+    background: var(--error-color);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.assignment-meta {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.assignment-instructions {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0.75rem;
+}
+
+.assignment-instructions h3 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.due-date {
+    color: var(--warning-color);
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.assignment-details {
+    margin-bottom: 1.5rem;
+}
+
+.assignment-details p {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.assignment-details strong {
+    color: var(--text-primary);
+}
+
+/* File Upload */
+.file-upload-area {
+    margin-top: 0.5rem;
+}
+
+.upload-placeholder {
+    border: 2px dashed var(--border-color);
+    border-radius: 0.75rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+}
+
+.upload-placeholder:hover {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.upload-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.upload-hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.file-preview {
+    background: white;
+    border: 2px solid var(--success-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.file-preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.file-icon {
+    font-size: 2rem;
+}
+
+.file-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.file-size {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.submission-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+}
+
+.submission-form h3 {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+}
+
+.submission-info {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.submission-info p {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+/* Grade Display */
+.grade-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+.grade-score {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    border-radius: 0.75rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.grade-number {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.grade-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.grade-stars {
+    font-size: 1.5rem;
+}
+
+.grade-feedback {
+    margin-bottom: 1.5rem;
+}
+
+.grade-feedback h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.grade-feedback h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.grade-feedback p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.grade-feedback details {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: 0.5rem;
+}
+
+.grade-feedback summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.grade-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.status-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-grading {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-graded {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Dark mode for assignments */
+[data-theme="dark"] .assignment-section {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .assignment-instructions,
+[data-theme="dark"] .submission-form,
+[data-theme="dark"] .submission-info,
+[data-theme="dark"] .grade-card {
+    background: var(--light-bg);
+}
+
+[data-theme="dark"] .upload-placeholder,
+[data-theme="dark"] .file-preview {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .grade-feedback details {
+    background: var(--card-bg);
+}
+

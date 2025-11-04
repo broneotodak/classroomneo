@@ -483,6 +483,9 @@ class AIClassroom {
     const stepProgress = this.progress.getStepProgress(step.id);
     const isCompleted = stepProgress?.status === 'completed';
 
+    // Check if this step has an assignment
+    const assignment = await this.loadAssignmentForStep(step.id);
+    
     // Get content based on module and step
     const content = this.getStepContent(module, step);
 
@@ -491,12 +494,14 @@ class AIClassroom {
         <div class="step-meta">
           <span class="step-badge">${module.title}</span>
           <span class="step-duration">⏱️ ${step.estimated_minutes} min</span>
+          ${assignment ? '<span class="assignment-badge">📝 Assignment</span>' : ''}
         </div>
         <h1 class="step-title">${step.title}</h1>
       </div>
 
       <div class="step-body">
         ${content}
+        ${assignment ? await this.renderAssignmentSection(assignment, step.id) : ''}
       </div>
 
       <div class="step-footer">
@@ -1380,6 +1385,453 @@ class AIClassroom {
       console.error('Error joining class:', error);
       alert('Failed to join class. Please try again.');
     }
+  }
+
+  // ==========================================
+  // ASSIGNMENTS & AI GRADING
+  // ==========================================
+
+  async loadAssignmentForStep(stepId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('assignments')
+        .select('*')
+        .eq('step_id', stepId)
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+      return data;
+    } catch (error) {
+      console.error('Error loading assignment:', error);
+      return null;
+    }
+  }
+
+  async renderAssignmentSection(assignment, stepId) {
+    // Check if student has submitted
+    const submission = await this.loadStudentSubmission(assignment.id);
+    const grade = submission ? await this.loadGrade(submission.id) : null;
+
+    // Get user role
+    const profile = await this.auth.getUserProfile();
+    const isTrainer = profile && (profile.role === 'admin' || profile.role === 'trainer');
+
+    if (isTrainer) {
+      return this.renderTrainerAssignmentView(assignment, stepId);
+    } else {
+      return this.renderStudentAssignmentView(assignment, submission, grade);
+    }
+  }
+
+  renderTrainerAssignmentView(assignment, stepId) {
+    return `
+      <div class="assignment-section trainer-view">
+        <div class="assignment-header">
+          <h2>📝 Assignment: ${this.escapeHtml(assignment.title)}</h2>
+          <span class="assignment-meta">Trainer View</span>
+        </div>
+        <div class="assignment-details">
+          <p><strong>Instructions:</strong> ${this.escapeHtml(assignment.instructions || assignment.description || '')}</p>
+          ${assignment.ai_grading_rubric ? `<p><strong>AI Rubric:</strong> ${this.escapeHtml(assignment.ai_grading_rubric)}</p>` : ''}
+          <p><strong>Max Score:</strong> ${assignment.max_score}/5</p>
+          <p><strong>Accepts:</strong> 
+            ${assignment.allow_file_upload ? '📎 Files' : ''} 
+            ${assignment.allow_url_submission ? '🔗 URLs' : ''}
+          </p>
+        </div>
+        <button class="btn btn-secondary btn-small" onclick="app.viewAllSubmissions(${assignment.id})">
+          View All Submissions
+        </button>
+      </div>
+    `;
+  }
+
+  async renderStudentAssignmentView(assignment, submission, grade) {
+    if (grade) {
+      // Show grade and feedback
+      return `
+        <div class="assignment-section graded">
+          <div class="assignment-header">
+            <h2>📝 Assignment: ${this.escapeHtml(assignment.title)}</h2>
+            <div class="grade-stars">${'⭐'.repeat(grade.score)}${'☆'.repeat(5 - grade.score)}</div>
+          </div>
+          <div class="grade-card">
+            <div class="grade-score">
+              <div class="grade-number">${grade.score}/5</div>
+              <div class="grade-label">${this.getGradeLabel(grade.score)}</div>
+            </div>
+            <div class="grade-feedback">
+              <h3>📝 Feedback</h3>
+              <p>${this.escapeHtml(grade.feedback || '')}</p>
+              
+              ${grade.ai_strengths ? `
+                <h4>✅ Strengths</h4>
+                <p>${this.escapeHtml(grade.ai_strengths)}</p>
+              ` : ''}
+              
+              ${grade.ai_improvements ? `
+                <h4>💡 Suggestions for Improvement</h4>
+                <p>${this.escapeHtml(grade.ai_improvements)}</p>
+              ` : ''}
+              
+              ${grade.ai_analysis ? `
+                <details>
+                  <summary>🔍 Detailed Analysis</summary>
+                  <p>${this.escapeHtml(grade.ai_analysis)}</p>
+                </details>
+              ` : ''}
+            </div>
+            <div class="grade-meta">
+              Graded by ${grade.grader_type === 'ai' ? '🤖 AI' : '👨‍🏫 Instructor'} • ${this.formatDate(grade.created_at)}
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${submission.id})">
+            View My Submission
+          </button>
+        </div>
+      `;
+    } else if (submission) {
+      // Show pending submission
+      return `
+        <div class="assignment-section pending">
+          <div class="assignment-header">
+            <h2>📝 Assignment: ${this.escapeHtml(assignment.title)}</h2>
+            <span class="status-badge status-${submission.status}">${submission.status}</span>
+          </div>
+          <div class="submission-info">
+            <p>✅ You submitted this assignment on ${this.formatDate(submission.submitted_at)}</p>
+            ${submission.status === 'grading' ? '<p>🤖 AI is grading your work...</p>' : ''}
+            ${submission.status === 'pending' ? '<p>⏳ Waiting for review...</p>' : ''}
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${submission.id})">
+            View Submission
+          </button>
+        </div>
+      `;
+    } else {
+      // Show submission form
+      return `
+        <div class="assignment-section unsubmitted">
+          <div class="assignment-header">
+            <h2>📝 Assignment: ${this.escapeHtml(assignment.title)}</h2>
+            <span class="assignment-required">Required</span>
+          </div>
+          
+          <div class="assignment-instructions">
+            <h3>Instructions</h3>
+            <p>${this.escapeHtml(assignment.instructions || assignment.description || '')}</p>
+            ${assignment.due_date ? `<p class="due-date">📅 Due: ${new Date(assignment.due_date).toLocaleString()}</p>` : ''}
+          </div>
+
+          <div class="submission-form">
+            <h3>Submit Your Work</h3>
+            
+            ${assignment.allow_file_upload ? `
+              <div class="form-group">
+                <label for="assignmentFile">Upload File</label>
+                <div class="file-upload-area" id="fileUploadArea_${assignment.id}">
+                  <input type="file" 
+                         id="assignmentFile_${assignment.id}" 
+                         accept="${(assignment.allowed_file_types || []).join(',')}"
+                         style="display: none;"
+                         onchange="app.handleFileSelect(${assignment.id}, event)">
+                  <div class="upload-placeholder" onclick="document.getElementById('assignmentFile_${assignment.id}').click()">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">Click to upload or drag and drop</div>
+                    <div class="upload-hint">Images, PDFs (max ${assignment.max_file_size_mb || 10}MB)</div>
+                  </div>
+                  <div id="filePreview_${assignment.id}" class="file-preview" style="display: none;"></div>
+                </div>
+              </div>
+            ` : ''}
+
+            ${assignment.allow_url_submission ? `
+              <div class="form-group">
+                <label for="assignmentUrl_${assignment.id}">Submission URL</label>
+                <input type="url" 
+                       id="assignmentUrl_${assignment.id}" 
+                       class="form-input" 
+                       placeholder="https://your-project.netlify.app or https://github.com/username/repo">
+                <small class="form-help">Link to your deployed project, GitHub repo, or other relevant URL</small>
+              </div>
+            ` : ''}
+
+            <div class="form-group">
+              <label for="assignmentNotes_${assignment.id}">Notes (Optional)</label>
+              <textarea id="assignmentNotes_${assignment.id}" 
+                        class="form-textarea" 
+                        rows="3" 
+                        placeholder="Add any notes about your submission..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="app.submitAssignment(${assignment.id}, ${step.id})">
+              🚀 Submit Assignment
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  async loadStudentSubmission(assignmentId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('submissions')
+        .select('*')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', this.auth.getCurrentUser().id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    } catch (error) {
+      console.error('Error loading submission:', error);
+      return null;
+    }
+  }
+
+  async loadGrade(submissionId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('grades')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    } catch (error) {
+      console.error('Error loading grade:', error);
+      return null;
+    }
+  }
+
+  getGradeLabel(score) {
+    const labels = {
+      5: 'Excellent',
+      4: 'Good',
+      3: 'Satisfactory',
+      2: 'Needs Work',
+      1: 'Incomplete'
+    };
+    return labels[score] || 'Ungraded';
+  }
+
+  selectedFile = null;
+
+  handleFileSelect(assignmentId, event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.selectedFile = file;
+
+    // Show preview
+    const preview = document.getElementById(`filePreview_${assignmentId}`);
+    const placeholder = preview.previousElementSibling;
+
+    placeholder.style.display = 'none';
+    preview.style.display = 'block';
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.innerHTML = `
+          <img src="${e.target.result}" alt="Preview" class="file-preview-image">
+          <div class="file-info">
+            <span class="file-name">${file.name}</span>
+            <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+            <button class="btn-remove" onclick="app.clearFile(${assignmentId})">Remove</button>
+          </div>
+        `;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.innerHTML = `
+        <div class="file-info">
+          <span class="file-icon">📄</span>
+          <span class="file-name">${file.name}</span>
+          <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+          <button class="btn-remove" onclick="app.clearFile(${assignmentId})">Remove</button>
+        </div>
+      `;
+    }
+  }
+
+  clearFile(assignmentId) {
+    this.selectedFile = null;
+    const fileInput = document.getElementById(`assignmentFile_${assignmentId}`);
+    const preview = document.getElementById(`filePreview_${assignmentId}`);
+    const placeholder = preview.previousElementSibling;
+
+    if (fileInput) fileInput.value = '';
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+    placeholder.style.display = 'flex';
+  }
+
+  async submitAssignment(assignmentId, stepId) {
+    const urlInput = document.getElementById(`assignmentUrl_${assignmentId}`);
+    const notesInput = document.getElementById(`assignmentNotes_${assignmentId}`);
+
+    const submissionUrl = urlInput?.value.trim() || null;
+    const notes = notesInput?.value.trim() || null;
+
+    if (!this.selectedFile && !submissionUrl) {
+      alert('Please upload a file or provide a URL');
+      return;
+    }
+
+    try {
+      this.showLoading(true);
+
+      let fileUrl = null;
+      let fileName = null;
+      let fileType = null;
+
+      // Upload file if selected
+      if (this.selectedFile) {
+        const uploadResult = await this.uploadFile(this.selectedFile);
+        fileUrl = uploadResult.publicUrl;
+        fileName = this.selectedFile.name;
+        fileType = this.selectedFile.type;
+      }
+
+      // Create submission
+      const { data: submission, error: submitError } = await this.supabase
+        .from('submissions')
+        .insert({
+          assignment_id: assignmentId,
+          student_id: this.auth.getCurrentUser().id,
+          submission_type: this.selectedFile && submissionUrl ? 'both' : (this.selectedFile ? 'file' : 'url'),
+          file_url: fileUrl,
+          file_name: fileName,
+          file_type: fileType,
+          submission_url: submissionUrl,
+          notes: notes,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (submitError) throw submitError;
+
+      alert('✅ Assignment submitted successfully!');
+      
+      // Trigger AI grading if enabled
+      const assignment_data = await this.loadAssignmentForStep(stepId);
+      if (assignment_data && assignment_data.ai_grading_enabled && CONFIG.openai.enabled) {
+        await this.triggerAIGrading(submission.id);
+      }
+
+      // Reload step content
+      await this.renderStepContent(this.currentModule, this.currentStep);
+      
+      this.showLoading(false);
+    } catch (error) {
+      console.error('Error submitting assignment:', error);
+      alert('Failed to submit assignment. Please try again.');
+      this.showLoading(false);
+    }
+  }
+
+  async uploadFile(file) {
+    const userId = this.auth.getCurrentUser().id;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await this.supabase.storage
+      .from('assignment-submissions')
+      .upload(fileName, file);
+
+    if (error) throw error;
+
+    const { data: publicData } = this.supabase.storage
+      .from('assignment-submissions')
+      .getPublicUrl(fileName);
+
+    return publicData;
+  }
+
+  async triggerAIGrading(submissionId) {
+    if (!CONFIG.openai.enabled) {
+      console.log('AI grading not enabled');
+      return;
+    }
+
+    try {
+      // Update status to grading
+      await this.supabase
+        .from('submissions')
+        .update({ status: 'grading' })
+        .eq('id', submissionId);
+
+      // Get submission and assignment data
+      const { data: submission } = await this.supabase
+        .from('submissions')
+        .select(`
+          *,
+          assignment:assignments(*)
+        `)
+        .eq('id', submissionId)
+        .single();
+
+      if (!submission) return;
+
+      // Initialize AI grader
+      const aiGrader = new AIGrader(CONFIG.openai.apiKey);
+
+      // Grade the submission
+      const gradeData = await aiGrader.gradeSubmission({
+        assignment_title: submission.assignment.title,
+        instructions: submission.assignment.instructions,
+        rubric: submission.assignment.ai_grading_rubric,
+        submission_url: submission.submission_url,
+        file_url: submission.file_url,
+        student_notes: submission.notes
+      });
+
+      // Save grade to database
+      await this.supabase
+        .from('grades')
+        .insert({
+          submission_id: submissionId,
+          grader_type: 'ai',
+          score: gradeData.score,
+          feedback: gradeData.feedback,
+          ai_analysis: gradeData.analysis,
+          ai_strengths: gradeData.strengths,
+          ai_improvements: gradeData.improvements,
+          graded_by: null
+        });
+
+      // Update submission status
+      await this.supabase
+        .from('submissions')
+        .update({ 
+          status: 'graded',
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+
+      alert('🤖 AI has graded your submission! Check the feedback above.');
+      
+    } catch (error) {
+      console.error('Error in AI grading:', error);
+      // Update status back to pending if grading failed
+      await this.supabase
+        .from('submissions')
+        .update({ status: 'pending' })
+        .eq('id', submissionId);
+    }
+  }
+
+  async viewAllSubmissions(assignmentId) {
+    alert('View all submissions feature coming in next update!');
+  }
+
+  async showSubmission(submissionId) {
+    alert('View submission details feature coming in next update!');
   }
 
   // Dark mode functionality
