@@ -17,8 +17,8 @@ const CONFIG = {
   
   // OpenAI configuration (for AI grading and module generation)
   openai: {
-    apiKey: 'YOUR_OPENAI_API_KEY_HERE',  // Add your OpenAI API key
-    enabled: false,  // Set to true when you add your API key
+    apiKey: 'k-proj-cnfpbEIpTM25UKzxFZxPgO6IT8jlV7qA9LTBXoojY1DXqcrCvSD-nt08_0v0KOXH0sEkjOGOw2T3BlbkFJLnmsFtPGdDDIXbHiFD7QDrHaEGEIPRn3KEBJaeziE-l7MzQUs73pGW6MpM6zYEIEbiqx6nWoMA',  // Add your OpenAI API key
+    enabled: true,  // Set to true when you add your API key
   },
   
   // App configuration
