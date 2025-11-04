@@ -163,19 +163,12 @@ body {
 
 #darkModeToggle:hover {
     transform: scale(1.1);
+    transform: rotate(20deg);
 }
 
 .theme-icon {
     display: inline-block;
-    transition: transform 0.5s ease;
-}
-
-[data-theme="dark"] .theme-icon {
-    content: '☀️';
-}
-
-[data-theme="dark"] .theme-icon::before {
-    content: '☀️';
+    transition: all 0.3s ease;
 }
 
 .container {
