@@ -311,14 +311,9 @@ class AIClassroom {
       document.getElementById('completedCard').style.display = 'block';
     }
 
-    // Check if user is student and show available classes
-    const profile = await this.auth.getUserProfile();
-    if (profile && profile.role === 'student') {
-      await this.loadAvailableClasses();
-      document.getElementById('joinClassSection').style.display = 'block';
-    } else {
-      document.getElementById('joinClassSection').style.display = 'none';
-    }
+    // Show available classes for everyone (students, trainers, admins can all join)
+    await this.loadAvailableClasses();
+    document.getElementById('joinClassSection').style.display = 'block';
 
     // Render modules list
     this.renderModulesList();
