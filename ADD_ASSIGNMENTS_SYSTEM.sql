@@ -223,10 +223,11 @@ SELECT
   s.notes,
   s.status,
   s.submitted_at,
+  s.graded_at,
   g.score,
   g.feedback,
   g.grader_type,
-  g.graded_at
+  g.created_at as grade_created_at
 FROM submissions s
 JOIN assignments a ON a.id = s.assignment_id
 JOIN steps st ON st.id = a.step_id
