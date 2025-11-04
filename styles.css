@@ -2009,3 +2009,98 @@ body {
     background: var(--light-bg);
 }
 
+/* AI Module Builder */
+.header-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.ai-builder-intro {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.ai-builder-intro p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.form-help {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.ai-suggestions {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: 0.5rem;
+}
+
+.ai-suggestions strong {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.suggestion-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chip {
+    background: white;
+    border: 2px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-primary);
+}
+
+.chip:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.ai-preview {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--light-bg);
+    border-radius: 0.75rem;
+    border: 2px solid var(--success-color);
+}
+
+.ai-preview h3 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .ai-builder-intro,
+[data-theme="dark"] .ai-suggestions,
+[data-theme="dark"] .ai-preview {
+    background: var(--light-bg);
+}
+
+[data-theme="dark"] .chip {
+    background: var(--card-bg);
+}
+

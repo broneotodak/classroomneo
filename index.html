@@ -302,7 +302,10 @@
                 <div class="admin-section">
                     <div class="section-header-flex">
                         <h2>Classes Management</h2>
-                        <button class="btn btn-primary btn-small" id="createClassBtn">➕ Create Class</button>
+                        <div class="header-buttons">
+                            <button class="btn btn-secondary btn-small" id="aiModuleBuilderBtn">🤖 AI Module Builder</button>
+                            <button class="btn btn-primary btn-small" id="createClassBtn">➕ Create Class</button>
+                        </div>
                     </div>
                     <div id="classesList" class="classes-list">
                         <div class="loading">Loading classes...</div>
@@ -424,6 +427,56 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancelCreateClass">Cancel</button>
                 <button class="btn btn-primary" id="submitCreateClass">Create Class</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Module Builder Modal -->
+    <div id="aiModuleBuilderModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>🤖 AI Module Builder</h2>
+                <button class="modal-close" id="closeAiModuleBuilder">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-builder-intro">
+                    <p>Describe your curriculum and AI will help generate modules and steps for your class.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiClassSelect">Select Class *</label>
+                    <select id="aiClassSelect" class="form-select" required>
+                        <option value="">Choose a class...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="aiPrompt">Describe Your Curriculum *</label>
+                    <textarea id="aiPrompt" class="form-textarea" rows="6" placeholder="Example: Create a 4-week course on React.js covering components, hooks, state management, and routing. Include practical exercises for building a todo app." required></textarea>
+                    <small class="form-help">Be specific about topics, duration, and skill level</small>
+                </div>
+
+                <div class="ai-suggestions">
+                    <strong>💡 Prompt Suggestions:</strong>
+                    <div class="suggestion-chips">
+                        <button class="chip" onclick="document.getElementById('aiPrompt').value = 'Create a comprehensive Python programming course covering basics, data structures, OOP, and web development with Flask. Include 5 modules with hands-on projects.'">Python Bootcamp</button>
+                        <button class="chip" onclick="document.getElementById('aiPrompt').value = 'Design a UI/UX course teaching Figma, design principles, user research, wireframing, and prototyping. Make it beginner-friendly with 4 modules.'">UI/UX Design</button>
+                        <button class="chip" onclick="document.getElementById('aiPrompt').value = 'Create a data science curriculum covering pandas, numpy, visualization, machine learning basics, and a capstone project. 6 modules total.'">Data Science</button>
+                    </div>
+                </div>
+
+                <div id="aiGeneratedPreview" class="ai-preview" style="display: none;">
+                    <h3>📋 Generated Curriculum Preview</h3>
+                    <div id="aiPreviewContent"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAiBuilder">Cancel</button>
+                <button class="btn btn-primary" id="generateWithAi" disabled>
+                    <span id="generateBtnText">🤖 Generate with AI</span>
+                    <span id="generateBtnLoading" style="display: none;">⏳ Generating...</span>
+                </button>
+                <button class="btn btn-success" id="saveAiModules" style="display: none;">✅ Save to Class</button>
             </div>
         </div>
     </div>
