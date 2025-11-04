@@ -4,7 +4,10 @@
 -- Run this in Supabase SQL Editor
 
 -- Add policy to allow students to enroll themselves
-CREATE POLICY IF NOT EXISTS "Students can enroll themselves" ON class_enrollments
+-- Drop first if exists, then create
+DROP POLICY IF EXISTS "Students can enroll themselves" ON class_enrollments;
+
+CREATE POLICY "Students can enroll themselves" ON class_enrollments
   FOR INSERT 
   WITH CHECK (
     student_id = auth.uid() 
