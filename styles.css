@@ -43,11 +43,106 @@
     --text-primary: #f1f5f9;
     --text-secondary: #cbd5e1;
     --border-color: #475569;
-    --gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    --gradient: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark mode body background */
+[data-theme="dark"] body {
+    background-color: var(--dark-bg);
+}
+
+/* Dark mode hero section */
+[data-theme="dark"] .hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
+}
+
+/* Dark mode for all cards */
+[data-theme="dark"] .tech-card,
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .progress-card,
+[data-theme="dark"] .module-card,
+[data-theme="dark"] .demo-card,
+[data-theme="dark"] .next-step-card {
+    background: var(--card-bg);
+}
+
+/* Dark mode for sections */
+[data-theme="dark"] .features-section {
+    background: var(--light-bg);
+}
+
+/* Dark mode for inputs and selects */
+[data-theme="dark"] .demo-input,
+[data-theme="dark"] .demo-textarea,
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .filter-input {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+/* Dark mode for message items */
+[data-theme="dark"] .message-item {
+    background: var(--card-bg);
+}
+
+/* Dark mode for learning sidebar */
+[data-theme="dark"] .learning-sidebar {
+    background: var(--card-bg);
+    border-right-color: var(--border-color);
+}
+
+[data-theme="dark"] .sidebar-step:hover {
+    background: var(--light-bg);
+}
+
+/* Dark mode for navbar */
+[data-theme="dark"] .navbar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Dark mode for footer */
+[data-theme="dark"] .footer {
+    background: #0a0f1e;
+}
+
+/* Dark mode tech cards in hero */
+[data-theme="dark"] .tech-card {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(71, 85, 105, 0.4);
+}
+
+[data-theme="dark"] .tech-card-primary {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(96, 165, 250, 0.4);
+}
+
+/* Dark mode hero callout */
+[data-theme="dark"] .hero-callout {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Dark mode buttons - keep them visible */
+[data-theme="dark"] .btn-primary {
+    background: var(--gradient);
+    color: white;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Dark mode loading overlay */
+[data-theme="dark"] .loading-overlay {
+    background: rgba(15, 23, 42, 0.95);
 }
 
 body {
