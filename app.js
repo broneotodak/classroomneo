@@ -197,9 +197,9 @@ class AIClassroom {
   }
 
   // Navigate to a page
-  navigateTo(page, params = [], updateHistory = true) {
+  async navigateTo(page, params = [], updateHistory = true) {
     // Check authentication for protected pages
-    if (['dashboard', 'learning', 'progress'].includes(page)) {
+    if (['dashboard', 'learning', 'progress', 'admin'].includes(page)) {
       if (!this.auth?.isAuthenticated()) {
         this.showLoginPrompt();
         page = 'home';
