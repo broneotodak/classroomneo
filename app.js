@@ -307,6 +307,16 @@ class AIClassroom {
       document.getElementById('nextStepCard').style.display = 'block';
       document.getElementById('completedCard').style.display = 'none';
     } else {
+      // Get class name for completion message
+      const className = this.modules.length > 0 && this.modules[0].class 
+        ? this.modules[0].class.name 
+        : 'AI Classroom';
+      
+      const completedCard = document.getElementById('completedCard');
+      if (completedCard) {
+        completedCard.querySelector('p').textContent = `You've completed all modules in ${className}!`;
+      }
+      
       document.getElementById('nextStepCard').style.display = 'none';
       document.getElementById('completedCard').style.display = 'block';
     }
