@@ -201,6 +201,10 @@ class AIClassroom {
     document.getElementById('closeManageStudents')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
     document.getElementById('saveEnrollments')?.addEventListener('click', () => this.handleSaveEnrollments());
     document.getElementById('searchAvailableStudents')?.addEventListener('input', (e) => this.filterAvailableStudents(e.target.value));
+    
+    // View submissions modal
+    document.getElementById('closeViewSubmissions')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
+    document.getElementById('closeSubmissionsModal')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
 
     // Handle browser back/forward
     window.addEventListener('popstate', () => this.handleRoute());
@@ -1827,11 +1831,163 @@ class AIClassroom {
   }
 
   async viewAllSubmissions(assignmentId) {
-    alert('View all submissions feature coming in next update!');
+    try {
+      // Get assignment details
+      const { data: assignment } = await this.supabase
+        .from('assignments')
+        .select('title')
+        .eq('id', assignmentId)
+        .single();
+
+      document.getElementById('submissionsAssignmentTitle').textContent = assignment?.title || 'Assignment';
+
+      // Get all submissions for this assignment
+      const { data: submissions, error } = await this.supabase
+        .from('submissions')
+        .select(`
+          *,
+          student:users_profile!submissions_student_id_fkey(github_username, github_avatar_url),
+          grade:grades(*)
+        `)
+        .eq('assignment_id', assignmentId)
+        .order('submitted_at', { ascending: false });
+
+      if (error) {
+        // If FK join fails, fetch separately
+        const { data: subs } = await this.supabase
+          .from('submissions')
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .order('submitted_at', { ascending: false });
+
+        if (subs) {
+          // Fetch student data and grades separately
+          for (const sub of subs) {
+            const { data: student } = await this.supabase
+              .from('users_profile')
+              .select('github_username, github_avatar_url')
+              .eq('id', sub.student_id)
+              .single();
+            sub.student = student;
+
+            const { data: grade } = await this.supabase
+              .from('grades')
+              .select('*')
+              .eq('submission_id', sub.id)
+              .single();
+            sub.grade = grade ? [grade] : [];
+          }
+          this.renderSubmissionsList(subs);
+        }
+      } else {
+        this.renderSubmissionsList(submissions || []);
+      }
+
+      this.showModal('viewSubmissionsModal');
+
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+      alert('Failed to load submissions. Please try again.');
+    }
+  }
+
+  renderSubmissionsList(submissions) {
+    const container = document.getElementById('submissionsList');
+
+    if (!submissions || submissions.length === 0) {
+      container.innerHTML = '<div class="loading">No submissions yet. Students haven\'t submitted anything.</div>';
+      return;
+    }
+
+    container.innerHTML = submissions.map(sub => {
+      const grade = sub.grade && sub.grade.length > 0 ? sub.grade[0] : null;
+      const student = sub.student || {};
+      
+      return `
+        <div class="submission-card ${grade ? 'graded' : sub.status}">
+          <div class="submission-header">
+            <div class="student-info">
+              <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=User'}" 
+                   class="student-avatar" 
+                   alt="${student.github_username}">
+              <div class="student-details">
+                <div class="student-name">${this.escapeHtml(student.github_username || 'Unknown')}</div>
+                <div class="submission-time">Submitted ${this.formatDate(sub.submitted_at)}</div>
+              </div>
+            </div>
+            <div class="submission-status-group">
+              ${grade ? `
+                <div class="grade-badge">
+                  <span class="grade-stars-small">${'⭐'.repeat(grade.score)}</span>
+                  <span class="grade-score-small">${grade.score}/5</span>
+                </div>
+              ` : `
+                <span class="status-badge status-${sub.status}">${sub.status}</span>
+              `}
+            </div>
+          </div>
+          
+          <div class="submission-content">
+            ${sub.submission_url ? `
+              <div class="submission-item">
+                <strong>🔗 URL:</strong> 
+                <a href="${sub.submission_url}" target="_blank" class="submission-link">${sub.submission_url}</a>
+              </div>
+            ` : ''}
+            
+            ${sub.file_url ? `
+              <div class="submission-item">
+                <strong>📎 File:</strong> 
+                <a href="${sub.file_url}" target="_blank" class="submission-link">${sub.file_name || 'View File'}</a>
+              </div>
+            ` : ''}
+            
+            ${sub.notes ? `
+              <div class="submission-item">
+                <strong>📝 Notes:</strong> 
+                <p>${this.escapeHtml(sub.notes)}</p>
+              </div>
+            ` : ''}
+            
+            ${grade && grade.feedback ? `
+              <div class="submission-item">
+                <strong>💬 AI Feedback:</strong>
+                <p>${this.escapeHtml(grade.feedback)}</p>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="submission-actions">
+            ${!grade && sub.status === 'pending' ? `
+              <button class="btn btn-primary btn-small" onclick="app.manualGradeSubmission(${sub.id})">
+                Grade Manually
+              </button>
+              <button class="btn btn-secondary btn-small" onclick="app.triggerAIGrading(${sub.id})">
+                🤖 Grade with AI
+              </button>
+            ` : ''}
+            ${grade ? `
+              <button class="btn btn-secondary btn-small" onclick="app.viewFullGrade(${sub.id})">
+                View Full Feedback
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async manualGradeSubmission(submissionId) {
+    alert('Manual grading interface coming soon! For now, use AI grading or add grades via Supabase.');
+  }
+
+  async viewFullGrade(submissionId) {
+    alert('Detailed grade view coming soon!');
   }
 
   async showSubmission(submissionId) {
-    alert('View submission details feature coming in next update!');
+    // Reuse the viewAllSubmissions logic but for single submission
+    alert('Individual submission view coming soon!');
   }
 
   // Dark mode functionality

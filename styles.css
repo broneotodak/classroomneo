@@ -2489,3 +2489,117 @@ body {
     background: var(--card-bg);
 }
 
+/* Submissions List (for trainers) */
+.submissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.submission-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.submission-card.graded {
+    border-color: var(--success-color);
+}
+
+.submission-card.pending {
+    border-color: var(--warning-color);
+}
+
+.submission-card.grading {
+    border-color: var(--primary-color);
+}
+
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.submission-status-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.submission-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.submission-content {
+    margin-bottom: 1rem;
+}
+
+.submission-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--light-bg);
+    border-radius: 0.5rem;
+}
+
+.submission-item strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.submission-item p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.submission-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.submission-link:hover {
+    text-decoration: underline;
+}
+
+.submission-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.grade-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+}
+
+.grade-stars-small {
+    font-size: 1rem;
+}
+
+.grade-score-small {
+    font-size: 0.875rem;
+}
+
+[data-theme="dark"] .submission-card {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .submission-item {
+    background: var(--light-bg);
+}
+
