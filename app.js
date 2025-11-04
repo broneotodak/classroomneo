@@ -330,7 +330,13 @@ class AIClassroom {
     const modules = this.progress.modules;
 
     if (!modules || modules.length === 0) {
-      container.innerHTML = '<div class="loading">No modules available</div>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📚</div>
+          <h3>No Modules Available</h3>
+          <p>Join a class above to access learning modules!</p>
+        </div>
+      `;
       return;
     }
 

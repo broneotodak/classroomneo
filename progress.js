@@ -10,15 +10,36 @@ class ProgressManager {
     this.userProgress = [];
   }
 
-  // Load all modules and steps
+  // Load all modules and steps (for enrolled classes only)
   async loadModules() {
     try {
+      // Get user's enrolled classes first
+      const userId = this.auth.getCurrentUser().id;
+      const { data: enrollments, error: enrollError } = await this.supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .eq('student_id', userId)
+        .eq('status', 'active');
+
+      if (enrollError) throw enrollError;
+
+      if (!enrollments || enrollments.length === 0) {
+        // No enrolled classes, return empty
+        this.modules = [];
+        return [];
+      }
+
+      const classIds = enrollments.map(e => e.class_id);
+
+      // Get modules from enrolled classes
       const { data: modules, error: modulesError } = await this.supabase
         .from('modules')
         .select(`
           *,
-          steps:steps(*)
+          steps:steps(*),
+          class:classes(name)
         `)
+        .in('class_id', classIds)
         .eq('is_active', true)
         .order('order_number', { ascending: true });
 
