@@ -15,6 +15,12 @@ const CONFIG = {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzdW93YWRjYnJ6dGxwbHphb2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxNTY1NTYsImV4cCI6MjA3NzczMjU1Nn0.OCxKgkzcGWVkHQFnVA-P_COagpuqkUlFtjfpzoqYkEY',
   },
   
+  // OpenAI configuration (for AI grading and module generation)
+  openai: {
+    apiKey: 'YOUR_OPENAI_API_KEY_HERE',  // Add your OpenAI API key
+    enabled: false,  // Set to true when you add your API key
+  },
+  
   // App configuration
   app: {
     name: 'AI Classroom',
