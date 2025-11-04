@@ -1181,17 +1181,33 @@ class AIClassroom {
     if (!container) return;
 
     try {
-      // Get all active classes
+      // Get all active classes (without the trainer join - we'll fetch separately)
       const { data: classes, error: classesError } = await this.supabase
         .from('classes')
-        .select(`
-          *,
-          trainer:users_profile!classes_trainer_id_fkey(github_username)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (classesError) throw classesError;
+
+      // Get trainer info separately
+      if (classes && classes.length > 0) {
+        const trainerIds = [...new Set(classes.map(c => c.trainer_id).filter(Boolean))];
+        const { data: trainers } = await this.supabase
+          .from('users_profile')
+          .select('id, github_username')
+          .in('id', trainerIds);
+
+        // Map trainers to classes
+        const trainerMap = {};
+        (trainers || []).forEach(t => {
+          trainerMap[t.id] = t;
+        });
+
+        classes.forEach(cls => {
+          cls.trainer = trainerMap[cls.trainer_id];
+        });
+      }
 
       // Get user's enrollments
       const userId = this.auth.getCurrentUser().id;
