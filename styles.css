@@ -720,6 +720,107 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Join Class Section */
+.join-class-section {
+    margin-bottom: 3rem;
+}
+
+.join-class-section h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-description {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.available-classes-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.available-class-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.available-class-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.available-class-card.enrolled {
+    border-color: var(--success-color);
+    background: #ecfdf5;
+}
+
+.available-class-header {
+    margin-bottom: 1rem;
+}
+
+.available-class-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.available-class-trainer {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.available-class-description {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+}
+
+.available-class-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.class-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.enrolled-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--success-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Dark mode for join class */
+[data-theme="dark"] .available-class-card {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .available-class-card.enrolled {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+}
+
 /* Modules Overview */
 .modules-overview {
     margin-bottom: 3rem;

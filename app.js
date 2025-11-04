@@ -311,6 +311,15 @@ class AIClassroom {
       document.getElementById('completedCard').style.display = 'block';
     }
 
+    // Check if user is student and show available classes
+    const profile = await this.auth.getUserProfile();
+    if (profile && profile.role === 'student') {
+      await this.loadAvailableClasses();
+      document.getElementById('joinClassSection').style.display = 'block';
+    } else {
+      document.getElementById('joinClassSection').style.display = 'none';
+    }
+
     // Render modules list
     this.renderModulesList();
   }
@@ -1159,6 +1168,106 @@ class AIClassroom {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.classList.remove('show');
+    }
+  }
+
+  // ==========================================
+  // STUDENT CLASS JOINING
+  // ==========================================
+
+  async loadAvailableClasses() {
+    const container = document.getElementById('availableClassesList');
+    if (!container) return;
+
+    try {
+      // Get all active classes
+      const { data: classes, error: classesError } = await this.supabase
+        .from('classes')
+        .select(`
+          *,
+          trainer:users_profile!classes_trainer_id_fkey(github_username)
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (classesError) throw classesError;
+
+      // Get user's enrollments
+      const userId = this.auth.getCurrentUser().id;
+      const { data: enrollments, error: enrollError } = await this.supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .eq('student_id', userId)
+        .eq('status', 'active');
+
+      if (enrollError) throw enrollError;
+
+      const enrolledClassIds = new Set((enrollments || []).map(e => e.class_id));
+
+      if (!classes || classes.length === 0) {
+        container.innerHTML = '<div class="loading">No active classes available at the moment.</div>';
+        return;
+      }
+
+      container.innerHTML = classes.map(cls => {
+        const isEnrolled = enrolledClassIds.has(cls.id);
+        const trainerName = cls.trainer?.github_username || 'Staff';
+        const startDate = cls.start_date ? new Date(cls.start_date).toLocaleDateString() : 'TBD';
+        
+        return `
+          <div class="available-class-card ${isEnrolled ? 'enrolled' : ''}" data-class-id="${cls.id}">
+            <div class="available-class-header">
+              <div class="available-class-title">${this.escapeHtml(cls.name)}</div>
+              <div class="available-class-trainer">👨‍🏫 Instructor: ${this.escapeHtml(trainerName)}</div>
+            </div>
+            ${cls.description ? `<div class="available-class-description">${this.escapeHtml(cls.description)}</div>` : ''}
+            <div class="available-class-meta">
+              <div class="class-meta-item">
+                <span>📅</span>
+                <span>Starts: ${startDate}</span>
+              </div>
+            </div>
+            ${isEnrolled 
+              ? '<div class="enrolled-badge">✅ Enrolled</div>'
+              : `<button class="btn btn-primary btn-small" onclick="app.joinClass(${cls.id}, '${this.escapeHtml(cls.name).replace(/'/g, "\\'")}')">Join Class</button>`
+            }
+          </div>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading available classes:', error);
+      container.innerHTML = '<div class="error">Failed to load classes.</div>';
+    }
+  }
+
+  async joinClass(classId, className) {
+    if (!confirm(`Do you want to join "${className}"?`)) return;
+
+    try {
+      const userId = this.auth.getCurrentUser().id;
+
+      const { error } = await this.supabase
+        .from('class_enrollments')
+        .insert({
+          class_id: classId,
+          student_id: userId,
+          status: 'active'
+        });
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          alert('You are already enrolled in this class!');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      alert('🎉 Successfully joined the class!');
+      await this.loadAvailableClasses();
+    } catch (error) {
+      console.error('Error joining class:', error);
+      alert('Failed to join class. Please try again.');
     }
   }
 
