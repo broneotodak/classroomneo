@@ -18,7 +18,41 @@
 -- Note: users_profile will remain
 
 -- ==========================================
--- STEP 2: Create/Update Tables
+-- STEP 2: Add class_id to modules if it doesn't exist
+-- ==========================================
+
+DO $$ 
+BEGIN
+  -- Add class_id column if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'modules' AND column_name = 'class_id'
+  ) THEN
+    ALTER TABLE modules ADD COLUMN class_id INTEGER REFERENCES classes(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added class_id column to modules table';
+  END IF;
+  
+  -- Drop the old unique constraint on slug (if exists)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE table_name = 'modules' AND constraint_name = 'modules_slug_key'
+  ) THEN
+    ALTER TABLE modules DROP CONSTRAINT modules_slug_key;
+    RAISE NOTICE 'Dropped old slug unique constraint';
+  END IF;
+  
+  -- Add new unique constraint (class_id, slug)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE table_name = 'modules' AND constraint_name = 'modules_class_id_slug_key'
+  ) THEN
+    ALTER TABLE modules ADD CONSTRAINT modules_class_id_slug_key UNIQUE(class_id, slug);
+    RAISE NOTICE 'Added new unique constraint on (class_id, slug)';
+  END IF;
+END $$;
+
+-- ==========================================
+-- STEP 3: Ensure Tables Exist
 -- ==========================================
 
 -- Classes table (already exists, just ensure it's there)
@@ -42,19 +76,6 @@ CREATE TABLE IF NOT EXISTS class_enrollments (
   enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'dropped')),
   UNIQUE(class_id, student_id)
-);
-
--- Modules table - NOW LINKED TO CLASSES!
-CREATE TABLE IF NOT EXISTS modules (
-  id SERIAL PRIMARY KEY,
-  class_id INTEGER REFERENCES classes(id) ON DELETE CASCADE,
-  slug TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  order_number INTEGER NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(class_id, slug)  -- Unique per class
 );
 
 -- Steps table (unchanged)
@@ -364,23 +385,18 @@ $$;
 GRANT EXECUTE ON FUNCTION create_class_with_default_modules TO authenticated;
 
 -- ==========================================
--- STEP 6: Update Existing Data
+-- STEP 6: Clean Up Old Data and Recreate
 -- ==========================================
 
--- If you have existing modules without class_id, we need to handle them
--- Option A: Delete old template modules
+-- Delete old modules (they don't have class_id set)
 DELETE FROM modules WHERE class_id IS NULL;
-
--- Option B: Or link them to your existing class (if you have one)
--- UPDATE modules SET class_id = 1 WHERE class_id IS NULL;
 
 -- ==========================================
 -- STEP 7: Recreate Modules for Existing Classes
 -- ==========================================
 
--- For each existing class, create modules
 -- Get your class ID first:
-SELECT id, name FROM classes ORDER BY id;
+SELECT id, name, 'Will create modules for this class' as note FROM classes ORDER BY id;
 
 -- Then run this for EACH class (replace <CLASS_ID> with actual ID):
 -- Example for class_id = 1:
