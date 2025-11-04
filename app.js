@@ -184,6 +184,18 @@ class AIClassroom {
     document.getElementById('refreshRosterBtn')?.addEventListener('click', () => this.loadStudentRoster());
     document.getElementById('searchStudents')?.addEventListener('input', (e) => this.filterStudents(e.target.value));
     document.getElementById('classFilter')?.addEventListener('change', (e) => this.filterByClass(e.target.value));
+    
+    // Class management modals
+    document.getElementById('createClassBtn')?.addEventListener('click', () => this.showCreateClassModal());
+    document.getElementById('closeCreateClassModal')?.addEventListener('click', () => this.hideModal('createClassModal'));
+    document.getElementById('cancelCreateClass')?.addEventListener('click', () => this.hideModal('createClassModal'));
+    document.getElementById('submitCreateClass')?.addEventListener('click', () => this.handleCreateClass());
+    
+    // Manage students modal
+    document.getElementById('closeManageStudentsModal')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
+    document.getElementById('closeManageStudents')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
+    document.getElementById('saveEnrollments')?.addEventListener('click', () => this.handleSaveEnrollments());
+    document.getElementById('searchAvailableStudents')?.addEventListener('input', (e) => this.filterAvailableStudents(e.target.value));
 
     // Handle browser back/forward
     window.addEventListener('popstate', () => this.handleRoute());
@@ -667,6 +679,7 @@ class AIClassroom {
 
     await this.loadStudentRoster();
     await this.loadAdminStats();
+    await this.loadClasses();
   }
 
   async loadAdminStats() {
@@ -821,6 +834,332 @@ class AIClassroom {
     );
 
     this.renderStudentTable(filtered);
+  }
+
+  // ==========================================
+  // CLASS MANAGEMENT FUNCTIONS
+  // ==========================================
+
+  async loadClasses() {
+    const container = document.getElementById('classesList');
+    if (!container) return;
+
+    try {
+      container.innerHTML = '<div class="loading">Loading classes...</div>';
+
+      const { data: classes, error } = await this.supabase
+        .from('classes')
+        .select(`
+          *,
+          enrollments:class_enrollments(count)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      this.allClasses = classes || [];
+
+      if (!classes || classes.length === 0) {
+        container.innerHTML = '<div class="loading">No classes created yet. Click "Create Class" to get started!</div>';
+        return;
+      }
+
+      this.renderClassesList(classes);
+    } catch (error) {
+      console.error('Error loading classes:', error);
+      container.innerHTML = '<div class="error">Failed to load classes.</div>';
+    }
+  }
+
+  renderClassesList(classes) {
+    const container = document.getElementById('classesList');
+    
+    container.innerHTML = classes.map(cls => {
+      const enrollmentCount = cls.enrollments?.[0]?.count || 0;
+      const startDate = cls.start_date ? new Date(cls.start_date).toLocaleDateString() : 'Not set';
+      const endDate = cls.end_date ? new Date(cls.end_date).toLocaleDateString() : 'Not set';
+      
+      return `
+        <div class="class-item" data-class-id="${cls.id}">
+          <div class="class-item-header">
+            <div>
+              <div class="class-item-title">${this.escapeHtml(cls.name)}</div>
+              <div class="class-item-meta">Created ${this.formatDate(cls.created_at)}</div>
+            </div>
+            <span class="module-badge">${cls.is_active ? 'Active' : 'Inactive'}</span>
+          </div>
+          ${cls.description ? `<div class="class-item-description">${this.escapeHtml(cls.description)}</div>` : ''}
+          <div class="class-item-stats">
+            <div class="class-stat">
+              <span class="class-stat-icon">👥</span>
+              <span>${enrollmentCount} student${enrollmentCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="class-stat">
+              <span class="class-stat-icon">📅</span>
+              <span>${startDate} - ${endDate}</span>
+            </div>
+          </div>
+          <div class="class-item-actions">
+            <button class="btn btn-primary btn-small-icon" onclick="app.showManageStudentsModal(${cls.id}, '${this.escapeHtml(cls.name).replace(/'/g, "\\'")}')">
+              👥 Manage Students
+            </button>
+            <button class="btn btn-secondary btn-small-icon" onclick="app.editClass(${cls.id})">
+              ✏️ Edit
+            </button>
+            <button class="btn btn-secondary btn-small-icon" onclick="app.deleteClass(${cls.id})">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Show create class modal
+  showCreateClassModal() {
+    this.showModal('createClassModal');
+    // Reset form
+    document.getElementById('createClassForm')?.reset();
+  }
+
+  // Handle create class
+  async handleCreateClass() {
+    const name = document.getElementById('className').value.trim();
+    const description = document.getElementById('classDescription').value.trim();
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const isActive = document.getElementById('isActive').checked;
+
+    if (!name) {
+      alert('Please enter a class name');
+      return;
+    }
+
+    try {
+      const user = this.auth.getCurrentUser();
+      
+      const { data, error } = await this.supabase
+        .from('classes')
+        .insert({
+          name: name,
+          description: description || null,
+          trainer_id: user.id,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          is_active: isActive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      alert('✅ Class created successfully!');
+      this.hideModal('createClassModal');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error creating class:', error);
+      alert('Failed to create class. Please try again.');
+    }
+  }
+
+  // Show manage students modal
+  async showManageStudentsModal(classId, className) {
+    this.currentClassId = classId;
+    document.getElementById('modalClassName').textContent = className;
+    this.showModal('manageStudentsModal');
+    
+    await this.loadStudentsForEnrollment(classId);
+  }
+
+  async loadStudentsForEnrollment(classId) {
+    try {
+      // Get all students
+      const { data: allStudents, error: studentsError } = await this.supabase
+        .from('users_profile')
+        .select('*')
+        .eq('role', 'student')
+        .order('github_username');
+
+      if (studentsError) throw studentsError;
+
+      // Get enrolled students in this class
+      const { data: enrollments, error: enrollError } = await this.supabase
+        .from('class_enrollments')
+        .select('student_id')
+        .eq('class_id', classId)
+        .eq('status', 'active');
+
+      if (enrollError) throw enrollError;
+
+      const enrolledIds = new Set((enrollments || []).map(e => e.student_id));
+      
+      this.availableStudents = (allStudents || []).filter(s => !enrolledIds.has(s.id));
+      this.enrolledStudents = (allStudents || []).filter(s => enrolledIds.has(s.id));
+      this.selectedStudents = new Set();
+
+      this.renderAvailableStudents();
+      this.renderEnrolledStudents();
+    } catch (error) {
+      console.error('Error loading students for enrollment:', error);
+    }
+  }
+
+  renderAvailableStudents(filter = '') {
+    const container = document.getElementById('availableStudentsList');
+    const students = filter
+      ? this.availableStudents.filter(s => 
+          (s.github_username || '').toLowerCase().includes(filter.toLowerCase()) ||
+          (s.email || '').toLowerCase().includes(filter.toLowerCase())
+        )
+      : this.availableStudents;
+
+    if (!students || students.length === 0) {
+      container.innerHTML = '<div class="loading">No available students</div>';
+      return;
+    }
+
+    container.innerHTML = students.map(student => `
+      <label class="student-checkbox-item">
+        <input type="checkbox" 
+               data-student-id="${student.id}" 
+               onchange="app.toggleStudentSelection('${student.id}', this.checked)">
+        <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.github_username || 'User')}" 
+             alt="${student.github_username}" 
+             class="student-checkbox-avatar">
+        <div class="student-checkbox-info">
+          <div class="student-checkbox-name">${this.escapeHtml(student.github_username || student.full_name || 'Unknown')}</div>
+          <div class="student-checkbox-email">${this.escapeHtml(student.email || '')}</div>
+        </div>
+      </label>
+    `).join('');
+  }
+
+  renderEnrolledStudents() {
+    const container = document.getElementById('enrolledStudentsList');
+    
+    if (!this.enrolledStudents || this.enrolledStudents.length === 0) {
+      container.innerHTML = '<div class="loading">No students enrolled yet</div>';
+      return;
+    }
+
+    container.innerHTML = this.enrolledStudents.map(student => `
+      <div class="enrolled-student-item" data-student-id="${student.id}">
+        <div class="enrolled-student-info">
+          <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.github_username || 'User')}" 
+               alt="${student.github_username}" 
+               class="student-checkbox-avatar">
+          <div class="student-checkbox-info">
+            <div class="student-checkbox-name">${this.escapeHtml(student.github_username || student.full_name || 'Unknown')}</div>
+            <div class="student-checkbox-email">${this.escapeHtml(student.email || '')}</div>
+          </div>
+        </div>
+        <button class="btn-remove" onclick="app.unenrollStudent('${student.id}')">Remove</button>
+      </div>
+    `).join('');
+  }
+
+  toggleStudentSelection(studentId, isChecked) {
+    if (isChecked) {
+      this.selectedStudents.add(studentId);
+    } else {
+      this.selectedStudents.delete(studentId);
+    }
+  }
+
+  async unenrollStudent(studentId) {
+    if (!confirm('Are you sure you want to remove this student from the class?')) return;
+
+    try {
+      const { error } = await this.supabase
+        .from('class_enrollments')
+        .delete()
+        .eq('class_id', this.currentClassId)
+        .eq('student_id', studentId);
+
+      if (error) throw error;
+
+      alert('✅ Student removed from class');
+      await this.loadStudentsForEnrollment(this.currentClassId);
+      await this.loadStudentRoster();
+    } catch (error) {
+      console.error('Error unenrolling student:', error);
+      alert('Failed to remove student. Please try again.');
+    }
+  }
+
+  async handleSaveEnrollments() {
+    if (this.selectedStudents.size === 0) {
+      alert('Please select at least one student to enroll');
+      return;
+    }
+
+    try {
+      const enrollments = Array.from(this.selectedStudents).map(studentId => ({
+        class_id: this.currentClassId,
+        student_id: studentId,
+        status: 'active'
+      }));
+
+      const { error } = await this.supabase
+        .from('class_enrollments')
+        .insert(enrollments);
+
+      if (error) throw error;
+
+      alert(`✅ Successfully enrolled ${this.selectedStudents.size} student(s)!`);
+      this.hideModal('manageStudentsModal');
+      await this.loadClasses();
+      await this.loadStudentRoster();
+    } catch (error) {
+      console.error('Error enrolling students:', error);
+      alert('Failed to enroll students. Please try again.');
+    }
+  }
+
+  filterAvailableStudents(searchTerm) {
+    this.renderAvailableStudents(searchTerm);
+  }
+
+  async editClass(classId) {
+    alert('Edit class feature coming soon! For now, you can edit directly in Supabase Table Editor.');
+  }
+
+  async deleteClass(classId) {
+    if (!confirm('Are you sure you want to delete this class? This will also remove all student enrollments.')) {
+      return;
+    }
+
+    try {
+      const { error } = await this.supabase
+        .from('classes')
+        .delete()
+        .eq('id', classId);
+
+      if (error) throw error;
+
+      alert('✅ Class deleted successfully');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      alert('Failed to delete class. Please try again.');
+    }
+  }
+
+  // Modal helpers
+  showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add('show');
+    }
+  }
+
+  hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove('show');
+    }
   }
 
   // Dark mode functionality

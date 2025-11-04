@@ -289,13 +289,14 @@
                     </div>
                 </div>
 
-                <!-- Classes Management (Coming Soon) -->
+                <!-- Classes Management -->
                 <div class="admin-section">
-                    <h2>Classes Management</h2>
-                    <div class="coming-soon-card">
-                        <div class="coming-soon-icon">🚧</div>
-                        <h3>Coming Soon</h3>
-                        <p>Class creation, management, and student enrollment features will be available here</p>
+                    <div class="section-header-flex">
+                        <h2>Classes Management</h2>
+                        <button class="btn btn-primary btn-small" id="createClassBtn">➕ Create Class</button>
+                    </div>
+                    <div id="classesList" class="classes-list">
+                        <div class="loading">Loading classes...</div>
                     </div>
                 </div>
             </div>
@@ -374,6 +375,82 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
         <p>Loading...</p>
+    </div>
+
+    <!-- Create Class Modal -->
+    <div id="createClassModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Class</h2>
+                <button class="modal-close" id="closeCreateClassModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createClassForm">
+                    <div class="form-group">
+                        <label for="className">Class Name *</label>
+                        <input type="text" id="className" class="form-input" placeholder="e.g., Web Dev Bootcamp 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="classDescription">Description</label>
+                        <textarea id="classDescription" class="form-textarea" rows="3" placeholder="Brief description of the class..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isActive" checked>
+                            <span>Active (students can enroll)</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCreateClass">Cancel</button>
+                <button class="btn btn-primary" id="submitCreateClass">Create Class</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Students Modal -->
+    <div id="manageStudentsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Manage Students - <span id="modalClassName">Class Name</span></h2>
+                <button class="modal-close" id="closeManageStudentsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="students-panels">
+                    <!-- Available Students -->
+                    <div class="students-panel">
+                        <h3>Available Students</h3>
+                        <input type="text" id="searchAvailableStudents" class="form-input" placeholder="Search students...">
+                        <div id="availableStudentsList" class="students-checklist">
+                            <div class="loading">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enrolled Students -->
+                    <div class="students-panel">
+                        <h3>Enrolled Students</h3>
+                        <div id="enrolledStudentsList" class="enrolled-students-list">
+                            <div class="loading">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeManageStudents">Close</button>
+                <button class="btn btn-primary" id="saveEnrollments">Save Changes</button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
