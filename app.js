@@ -671,12 +671,14 @@ class AIClassroom {
 
   async loadAdminStats() {
     try {
-      // Get all students
+      // Get all students using function (more reliable with RLS)
       const { data: students, error } = await this.supabase
-        .from('admin_student_roster')
-        .select('*');
+        .rpc('get_student_roster');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading students:', error);
+        throw error;
+      }
 
       // Calculate stats
       const totalStudents = students ? students.length : 0;
@@ -716,12 +718,14 @@ class AIClassroom {
     try {
       container.innerHTML = '<div class="loading">Loading students...</div>';
 
+      // Use RPC function instead of direct view access
       const { data: students, error } = await this.supabase
-        .from('admin_student_roster')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_student_roster');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading roster:', error);
+        throw error;
+      }
 
       if (!students || students.length === 0) {
         container.innerHTML = '<div class="loading">No students enrolled yet.</div>';
