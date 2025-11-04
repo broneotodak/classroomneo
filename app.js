@@ -347,20 +347,26 @@ class AIClassroom {
 
     container.innerHTML = modules.map(module => {
       const moduleProgress = this.progress.getModuleProgress(module.id);
+      const isCompleted = moduleProgress.isCompleted;
+      const buttonText = isCompleted ? '🔄 Review' : (moduleProgress.isStarted ? 'Continue' : 'Start');
+      const buttonClass = isCompleted ? 'btn-secondary' : 'btn-primary';
+      
       return `
-        <div class="module-card" data-module-id="${module.id}">
+        <div class="module-card ${isCompleted ? 'module-completed' : ''}" data-module-id="${module.id}">
           <div class="module-card-header">
             <h3>${module.title}</h3>
-            <span class="module-badge">${moduleProgress.completedSteps}/${moduleProgress.totalSteps} steps</span>
+            <span class="module-badge ${isCompleted ? 'badge-completed' : ''}">${moduleProgress.completedSteps}/${moduleProgress.totalSteps} steps</span>
           </div>
           <p class="module-description">${module.description}</p>
           <div class="module-progress-bar">
             <div class="module-progress-fill" style="width: ${moduleProgress.completionPercentage}%"></div>
           </div>
           <div class="module-card-footer">
-            <span class="module-progress-text">${moduleProgress.completionPercentage}% complete</span>
-            <button class="btn btn-primary btn-small" onclick="app.startModule(${module.id})">
-              ${moduleProgress.isStarted ? 'Continue' : 'Start'} →
+            <span class="module-progress-text">
+              ${isCompleted ? '✅ Completed' : `${moduleProgress.completionPercentage}% complete`}
+            </span>
+            <button class="btn ${buttonClass} btn-small" onclick="app.startModule(${module.id})">
+              ${buttonText} →
             </button>
           </div>
         </div>
@@ -486,9 +492,12 @@ class AIClassroom {
 
       <div class="step-footer">
         <button class="btn btn-secondary" onclick="app.navigateToPreviousStep()">← Previous</button>
-        <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-primary'}" onclick="app.completeCurrentStep()">
-          ${isCompleted ? 'Next Step →' : 'Mark Complete & Continue →'}
-        </button>
+        <div class="step-footer-right">
+          ${isCompleted ? '<span class="completion-notice">✅ You completed this step</span>' : ''}
+          <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-primary'}" onclick="app.completeCurrentStep()">
+            ${isCompleted ? 'Next Step →' : 'Mark Complete & Continue →'}
+          </button>
+        </div>
       </div>
     `;
   }
