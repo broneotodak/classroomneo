@@ -444,10 +444,15 @@ class AIClassroom {
               </div>
             ` : ''}
             
-            <div style="margin-top: 1rem;">
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
               <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${sub.id})">
                 View Full Details
               </button>
+              ${grade && grade.score < 5 ? `
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); app.resubmitAssignment(${sub.assignment_id}, ${sub.id})">
+                  🔄 Resubmit
+                </button>
+              ` : ''}
             </div>
           </div>
         `;
@@ -635,9 +640,16 @@ class AIClassroom {
                 `<span class="submitted-date">Submitted ${this.formatDate(submission.submitted_at)}</span>` :
                 '<span class="not-submitted-text">Awaiting submission</span>'
               }
-              <button class="btn btn-${grade ? 'secondary' : 'primary'} btn-small" onclick="app.goToAssignmentStep(${assignment.step_id})">
-                ${grade ? 'View Feedback' : (submission ? 'View Submission' : 'Submit Now')} →
-              </button>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-${grade ? 'secondary' : 'primary'} btn-small" onclick="app.goToAssignmentStep(${assignment.step_id})">
+                  ${grade ? 'View Feedback' : (submission ? 'View Submission' : 'Submit Now')} →
+                </button>
+                ${grade && grade.score < 5 ? `
+                  <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); app.resubmitAssignment(${assignment.id}, ${submission.id})">
+                    🔄 Resubmit
+                  </button>
+                ` : ''}
+              </div>
             </div>
           </div>
         `;
