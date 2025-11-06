@@ -3703,7 +3703,7 @@ class AIClassroom {
         </div>
 
         <div class="cert-actions">
-          <button class="btn btn-primary" onclick="app.downloadCertificate('${certificate.certificate_code}')">
+          <button class="btn btn-primary" id="download-cert-btn">
             📥 Download as Image
           </button>
           <button class="btn btn-secondary" onclick="this.closest('.certificate-modal').remove()">
@@ -3714,28 +3714,61 @@ class AIClassroom {
     `;
 
     document.body.appendChild(modal);
+
+    // Add event listener for download button
+    const downloadBtn = document.getElementById('download-cert-btn');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', () => {
+        this.downloadCertificate(certificate.certificate_code);
+      });
+    }
   }
 
   async downloadCertificate(certCode) {
+    console.log('Download certificate called for:', certCode);
+
     const certElement = document.getElementById('certificate-content');
-    if (!certElement) return;
+    if (!certElement) {
+      console.error('Certificate element not found!');
+      alert('Certificate not found. Please try again.');
+      return;
+    }
 
     try {
-      // Use html2canvas to convert the certificate to an image
+      // Check if html2canvas is available
       if (typeof html2canvas === 'undefined') {
-        alert('Download functionality requires html2canvas library. Add this to your HTML:\n<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>');
+        console.error('html2canvas library not loaded');
+        alert('Download library not loaded. Please refresh the page and try again.');
         return;
+      }
+
+      console.log('Starting certificate capture...');
+
+      // Show loading feedback
+      const downloadBtn = document.getElementById('download-cert-btn');
+      if (downloadBtn) {
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '⏳ Generating...';
       }
 
       // Generate canvas from certificate
       const canvas = await html2canvas(certElement, {
         scale: 2,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        useCORS: true
       });
+
+      console.log('Certificate captured, creating download...');
 
       // Convert to blob and download
       canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('Failed to create image blob');
+          alert('Failed to create image. Please try again.');
+          return;
+        }
+
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -3744,10 +3777,28 @@ class AIClassroom {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+
+        console.log('Certificate downloaded successfully!');
+
+        // Reset button
+        if (downloadBtn) {
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = '✅ Downloaded!';
+          setTimeout(() => {
+            downloadBtn.innerHTML = '📥 Download as Image';
+          }, 2000);
+        }
       });
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Error downloading certificate. Please try again.');
+      alert('Error downloading certificate: ' + error.message);
+
+      // Reset button on error
+      const downloadBtn = document.getElementById('download-cert-btn');
+      if (downloadBtn) {
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = '📥 Download as Image';
+      }
     }
   }
 
