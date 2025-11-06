@@ -483,7 +483,8 @@ class AIClassroom {
                 View Full Details
               </button>
               ${grade && grade.score < 5 ? `
-                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); app.resubmitAssignment(${sub.assignment_id}, ${sub.id})">
+                <button class="btn btn-primary btn-small" 
+                        onclick="console.log('Button clicked for submission:', ${sub.id}, 'assignment:', ${sub.assignment_id}); app.resubmitAssignment(${sub.assignment_id}, ${sub.id}); return false;">
                   🔄 Resubmit
                 </button>
               ` : ''}
@@ -3179,21 +3180,40 @@ class AIClassroom {
 
   // Resubmit assignment - Show modal instead of navigation
   async resubmitAssignment(assignmentId, oldSubmissionId) {
+    console.log('Resubmit clicked:', { assignmentId, oldSubmissionId });
+    
+    // Validate inputs
+    if (!assignmentId || !oldSubmissionId) {
+      console.error('Missing IDs:', { assignmentId, oldSubmissionId });
+      alert('Error: Missing assignment or submission ID');
+      return;
+    }
+    
     try {
+      this.showLoading(true);
+      
       // Close any existing modals
       document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
 
       // Get assignment details
-      const { data: assignment } = await this.supabase
+      const { data: assignment, error: assignmentError } = await this.supabase
         .from('assignments')
         .select('title, description, instructions, allow_file_upload, allow_url_submission, allowed_file_types, max_file_size_mb')
         .eq('id', assignmentId)
         .single();
 
+      if (assignmentError) {
+        console.error('Error fetching assignment:', assignmentError);
+        throw assignmentError;
+      }
+
       if (!assignment) {
         alert('Assignment not found');
+        this.showLoading(false);
         return;
       }
+
+      this.showLoading(false);
 
       // Show resubmission modal
       const modal = document.createElement('div');
@@ -3251,8 +3271,9 @@ class AIClassroom {
       document.body.appendChild(modal);
 
     } catch (error) {
+      this.showLoading(false);
       console.error('Error showing resubmit modal:', error);
-      alert('Failed to load resubmission form.');
+      alert('Failed to load resubmission form: ' + error.message);
     }
   }
 
