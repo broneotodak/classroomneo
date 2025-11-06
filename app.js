@@ -3648,23 +3648,107 @@ class AIClassroom {
       .eq('id', certificate.class_id)
       .single();
 
-    // For now, just show alert with certificate info
-    // In production, this would open a beautiful certificate modal with download option
-    const certInfo = `
-🎓 CERTIFICATE OF COMPLETION
+    // Create certificate modal
+    const modal = document.createElement('div');
+    modal.className = 'certificate-modal';
+    modal.innerHTML = `
+      <div class="certificate-overlay" onclick="this.parentElement.remove()"></div>
+      <div class="certificate-container">
+        <button class="cert-close" onclick="this.closest('.certificate-modal').remove()">✕</button>
 
-Student: ${student?.github_username || 'Student'}
-Class: ${classData?.name || 'Class'}
-Completed: ${new Date(certificate.completion_date).toLocaleDateString()}
-Modules: ${certificate.modules_completed}/${certificate.total_modules}
-Assignments: ${certificate.assignments_graded}/${certificate.total_assignments}
-Average Grade: ${certificate.average_grade ? certificate.average_grade.toFixed(1) : 'N/A'}/5
-Certificate ID: ${certificate.certificate_code}
+        <div class="certificate" id="certificate-content">
+          <div class="cert-border">
+            <div class="cert-header">
+              <div class="cert-logo">🎓</div>
+              <h1 class="cert-title">CERTIFICATE OF COMPLETION</h1>
+              <p class="cert-subtitle">This is to certify that</p>
+            </div>
 
-Download feature coming in next update!
+            <div class="cert-body">
+              <h2 class="cert-name">${student?.full_name || student?.github_username || 'Student'}</h2>
+              <p class="cert-text">has successfully completed the training program</p>
+              <h3 class="cert-course">${classData?.name || 'AI Classroom Course'}</h3>
+
+              <div class="cert-details">
+                <div class="cert-detail">
+                  <span class="cert-label">Modules Completed:</span>
+                  <span class="cert-value">${certificate.modules_completed}/${certificate.total_modules}</span>
+                </div>
+                <div class="cert-detail">
+                  <span class="cert-label">Assignments Graded:</span>
+                  <span class="cert-value">${certificate.assignments_graded}/${certificate.total_assignments}</span>
+                </div>
+                <div class="cert-detail">
+                  <span class="cert-label">Average Score:</span>
+                  <span class="cert-value">${certificate.average_grade ? certificate.average_grade.toFixed(1) : 'N/A'}/5.0</span>
+                </div>
+              </div>
+
+              <div class="cert-footer">
+                <div class="cert-date">
+                  <p class="cert-label">Completion Date</p>
+                  <p class="cert-value">${new Date(certificate.completion_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+                <div class="cert-signature">
+                  <div class="cert-signature-line"></div>
+                  <p class="cert-label">Trainer: ${classData?.trainer?.github_username || 'Instructor'}</p>
+                </div>
+              </div>
+
+              <div class="cert-code">
+                <p>Certificate ID: ${certificate.certificate_code}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cert-actions">
+          <button class="btn btn-primary" onclick="app.downloadCertificate('${certificate.certificate_code}')">
+            📥 Download as Image
+          </button>
+          <button class="btn btn-secondary" onclick="this.closest('.certificate-modal').remove()">
+            Close
+          </button>
+        </div>
+      </div>
     `;
 
-    alert(certInfo);
+    document.body.appendChild(modal);
+  }
+
+  async downloadCertificate(certCode) {
+    const certElement = document.getElementById('certificate-content');
+    if (!certElement) return;
+
+    try {
+      // Use html2canvas to convert the certificate to an image
+      if (typeof html2canvas === 'undefined') {
+        alert('Download functionality requires html2canvas library. Add this to your HTML:\n<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>');
+        return;
+      }
+
+      // Generate canvas from certificate
+      const canvas = await html2canvas(certElement, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Certificate-${certCode}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Error downloading certificate. Please try again.');
+    }
   }
 
   // Dark mode functionality
