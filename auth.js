@@ -33,6 +33,10 @@ class AuthManager {
           
           if (event === 'SIGNED_IN') {
             this.updateLastLogin();
+            // Redirect to dashboard on sign in
+            if (window.location.hash === '' || window.location.hash === '#home') {
+              window.location.hash = '#dashboard';
+            }
           }
         } else {
           this.currentUser = null;

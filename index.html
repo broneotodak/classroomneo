@@ -200,20 +200,87 @@
                     </div>
                 </div>
 
-                <!-- Join a Class (for students) -->
-                <div class="join-class-section" id="joinClassSection" style="display: none;">
+                <!-- My Classes -->
+                <div class="my-classes-section">
+                    <h2>My Classes</h2>
+                    <div id="myClassesList" class="my-classes-list">
+                        <div class="loading">Loading your classes...</div>
+                    </div>
+                </div>
+
+                <!-- Available Classes -->
+                <div class="available-classes-section">
                     <h2>Available Classes</h2>
-                    <p class="section-description">Join a class to track your progress with your cohort</p>
+                    <p class="section-description">Join a class to start learning</p>
                     <div id="availableClassesList" class="available-classes-list">
                         <div class="loading">Loading available classes...</div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <!-- Modules Overview -->
-                <div class="modules-overview">
-                    <h2>Your Modules</h2>
-                    <div id="modulesList" class="modules-list">
+        <!-- Class Detail Page -->
+        <section id="class-detail" class="page-section">
+            <div class="container">
+                <button id="backToDashboardFromClass" class="btn-back">← Back to Dashboard</button>
+                
+                <div class="class-detail-header">
+                    <div>
+                        <h1 id="classDetailTitle">Class Name</h1>
+                        <p id="classDetailDescription" class="class-detail-subtitle"></p>
+                    </div>
+                    <div id="certificateSection" class="certificate-placeholder" style="display: none;">
+                        <button class="btn btn-success" id="downloadCertificate">
+                            🎓 Download Certificate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Class Progress Stats -->
+                <div class="class-stats">
+                    <div class="class-stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Modules</div>
+                            <div class="stat-value" id="classModulesCount">0</div>
+                        </div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" id="classCompletedCount">0</div>
+                        </div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Assignments</div>
+                            <div class="stat-value" id="classAssignmentsCount">0/0</div>
+                        </div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Avg. Grade</div>
+                            <div class="stat-value" id="classAvgGrade">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modules in This Class -->
+                <div class="class-modules-section">
+                    <h2>Modules</h2>
+                    <div id="classModulesList" class="modules-list">
                         <div class="loading">Loading modules...</div>
+                    </div>
+                </div>
+
+                <!-- Assignments & Submissions -->
+                <div class="class-assignments-section">
+                    <h2>Assignments & Submissions</h2>
+                    <div id="classAssignmentsList" class="assignments-overview">
+                        <div class="loading">Loading assignments...</div>
                     </div>
                 </div>
             </div>
