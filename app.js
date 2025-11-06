@@ -2500,11 +2500,173 @@ class AIClassroom {
   }
 
   async manualGradeSubmission(submissionId) {
-    alert('Manual grading interface coming soon! For now, use AI grading or add grades via Supabase.');
+    try {
+      // Get submission details
+      const { data: submission } = await this.supabase
+        .from('submissions')
+        .select('*, assignments(*)')
+        .eq('id', submissionId)
+        .single();
+
+      if (!submission) {
+        alert('Submission not found');
+        return;
+      }
+
+      // Show grading modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content grade-modal">
+          <div class="modal-header">
+            <h2>Grade Submission</h2>
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+          </div>
+          
+          <div class="modal-body">
+            <div class="submission-preview">
+              <h3>${this.escapeHtml(submission.assignments.title)}</h3>
+              ${submission.submission_url ? `
+                <p><strong>URL:</strong> <a href="${submission.submission_url}" target="_blank">${submission.submission_url}</a></p>
+              ` : ''}
+              ${submission.file_url ? `
+                <p><strong>File:</strong> <a href="${submission.file_url}" target="_blank">${submission.file_name}</a></p>
+              ` : ''}
+              ${submission.notes ? `
+                <p><strong>Notes:</strong> ${this.escapeHtml(submission.notes)}</p>
+              ` : ''}
+            </div>
+
+            <div class="grade-form">
+              <div class="form-group">
+                <label>Score (1-5 stars)</label>
+                <div class="star-selector">
+                  ${[1, 2, 3, 4, 5].map(star => `
+                    <button type="button" class="star-btn" data-score="${star}" onclick="app.selectGradeScore(${star})">
+                      <span class="star-icon">⭐</span>
+                      <span class="star-label">${star}</span>
+                    </button>
+                  `).join('')}
+                </div>
+                <input type="hidden" id="gradeScore" value="5">
+              </div>
+
+              <div class="form-group">
+                <label for="gradeFeedback">Overall Feedback *</label>
+                <textarea id="gradeFeedback" rows="4" placeholder="Provide constructive feedback..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="gradeStrengths">What They Did Well</label>
+                <textarea id="gradeStrengths" rows="3" placeholder="Highlight their strengths..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="gradeImprovements">How to Improve</label>
+                <textarea id="gradeImprovements" rows="3" placeholder="Suggestions for improvement..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            <button class="btn btn-primary" onclick="app.submitManualGrade(${submissionId})">Submit Grade</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Auto-select 5 stars by default
+      this.selectGradeScore(5);
+
+    } catch (error) {
+      console.error('Error showing grade form:', error);
+      alert('Failed to load grading form');
+    }
+  }
+
+  selectGradeScore(score) {
+    document.getElementById('gradeScore').value = score;
+    
+    // Update UI
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      const btnScore = parseInt(btn.dataset.score);
+      if (btnScore <= score) {
+        btn.classList.add('selected');
+      } else {
+        btn.classList.remove('selected');
+      }
+    });
+  }
+
+  async submitManualGrade(submissionId) {
+    try {
+      const score = parseInt(document.getElementById('gradeScore').value);
+      const feedback = document.getElementById('gradeFeedback').value.trim();
+      const strengths = document.getElementById('gradeStrengths').value.trim();
+      const improvements = document.getElementById('gradeImprovements').value.trim();
+
+      if (!feedback) {
+        alert('Please provide feedback');
+        return;
+      }
+
+      if (score < 1 || score > 5) {
+        alert('Score must be between 1 and 5');
+        return;
+      }
+
+      this.showLoading(true);
+
+      // Insert grade
+      const { error: gradeError } = await this.supabase
+        .from('grades')
+        .insert({
+          submission_id: submissionId,
+          grader_type: 'manual',
+          score: score,
+          feedback: feedback,
+          ai_strengths: strengths || null,
+          ai_improvements: improvements || null,
+          graded_by: this.user.id
+        });
+
+      if (gradeError) throw gradeError;
+
+      // Update submission status
+      const { error: statusError } = await this.supabase
+        .from('submissions')
+        .update({ 
+          status: 'graded',
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+
+      if (statusError) throw statusError;
+
+      this.showLoading(false);
+
+      // Close modal
+      document.querySelector('.modal-overlay').remove();
+
+      alert('✅ Grade submitted successfully!');
+
+      // Refresh current view
+      if (this.currentStep) {
+        await this.renderStepContent(this.currentModule, this.currentStep);
+      }
+
+    } catch (error) {
+      this.showLoading(false);
+      console.error('Error submitting grade:', error);
+      alert('Failed to submit grade: ' + error.message);
+    }
   }
 
   async viewFullGrade(submissionId) {
-    alert('Detailed grade view coming soon!');
+    // This already works via showSubmission, just redirect
+    await this.showSubmission(submissionId);
   }
 
   async showSubmission(submissionId) {

@@ -44,3 +44,5 @@ supabase/.temp
 *-credentials.json
 secrets.json
 
+# Auto-generated environment config (from Netlify build)
+env-config.js

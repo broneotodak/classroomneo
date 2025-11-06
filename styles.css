@@ -3043,3 +3043,99 @@ body {
     margin-bottom: 0.5rem;
 }
 
+/* ========================================== 
+   MANUAL GRADING MODAL
+   ========================================== */
+
+.grade-modal {
+    max-width: 700px;
+}
+
+.submission-preview {
+    background: var(--light-bg);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.submission-preview h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.submission-preview p {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.submission-preview a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.grade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.star-selector {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.star-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.star-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.star-btn.selected {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.star-icon {
+    font-size: 1.5rem;
+}
+
+.star-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.star-btn.selected .star-label {
+    color: white;
+}
+
+[data-theme="dark"] .star-btn {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .star-btn.selected {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+[data-theme="dark"] .submission-preview {
+    background: var(--card-bg);
+}

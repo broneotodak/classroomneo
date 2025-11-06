@@ -17,15 +17,17 @@ const CONFIG = {
   
   // OpenAI configuration (for AI grading and module generation)
   openai: {
-    apiKey: 'k-proj-cnfpbEIpTM25UKzxFZxPgO6IT8jlV7qA9LTBXoojY1DXqcrCvSD-nt08_0v0KOXH0sEkjOGOw2T3BlbkFJLnmsFtPGdDDIXbHiFD7QDrHaEGEIPRn3KEBJaeziE-l7MzQUs73pGW6MpM6zYEIEbiqx6nWoMA',  // Add your OpenAI API key
-    enabled: true,  // Set to true when you add your API key
+    // Use Netlify environment variable or fallback to empty
+    apiKey: typeof NETLIFY_OPENAI_KEY !== 'undefined' ? NETLIFY_OPENAI_KEY : '',
+    enabled: typeof NETLIFY_OPENAI_KEY !== 'undefined' && NETLIFY_OPENAI_KEY !== '',
   },
   
   // App configuration
   app: {
     name: 'AI Classroom',
-    version: '2.0.0',
+    version: '4.0.0',
     environment: 'production',
+    cacheVersion: '4.0', // Increment to force all users to refresh cache
   },
 };
 

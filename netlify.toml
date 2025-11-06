@@ -7,6 +7,7 @@
     echo "// Auto-generated from Netlify environment variables" > env-config.js
     echo "const NETLIFY_SUPABASE_URL = '$SUPABASE_URL';" >> env-config.js
     echo "const NETLIFY_SUPABASE_ANON_KEY = '$SUPABASE_ANON_KEY';" >> env-config.js
+    echo "const NETLIFY_OPENAI_KEY = '$OPENAI_API_KEY';" >> env-config.js
   '''
   
   # Directory to publish (root directory for this project)
@@ -30,7 +31,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     
     # Content Security Policy
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: https:;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com; img-src 'self' data: https:;"
     
     # Performance headers
     Cache-Control = "public, max-age=3600"
