@@ -51,13 +51,6 @@ class AuthManager {
   // Initialize auth state
   async initialize() {
     try {
-      // Check cache version on app load
-      if (!this.checkCacheVersion() && !window.location.search.includes('v=')) {
-        console.log('⚠️ Cache outdated, forcing reload...');
-        this.clearCacheAndReload();
-        return null;
-      }
-
       // Get current session
       const { data: { session }, error } = await this.supabase.auth.getSession();
       
@@ -86,10 +79,12 @@ class AuthManager {
           
           if (event === 'SIGNED_IN') {
             this.updateLastLogin();
-            // Clear cache and redirect to dashboard on sign in
-            console.log('✅ Signed in - clearing cache...');
+            // Just redirect to dashboard, don't clear cache on every login
+            console.log('✅ Signed in successfully');
             setTimeout(() => {
-              this.clearCacheAndReload();
+              if (window.location.hash === '' || window.location.hash === '#home' || window.location.hash === '#') {
+                window.location.hash = '#dashboard';
+              }
             }, 100);
           }
         } else {
