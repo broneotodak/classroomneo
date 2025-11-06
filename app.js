@@ -3635,6 +3635,15 @@ class AIClassroom {
   }
 
   async showCertificate(certificate) {
+    console.log('showCertificate called with:', certificate);
+
+    // Validate certificate data
+    if (!certificate || !certificate.certificate_code) {
+      console.error('Invalid certificate data:', certificate);
+      alert('Certificate data is incomplete. Please try reloading the page.');
+      return;
+    }
+
     // Get student and class info
     const { data: student } = await this.supabase
       .from('users_profile')
@@ -3647,6 +3656,8 @@ class AIClassroom {
       .select('*, trainer:users_profile!classes_trainer_id_fkey(github_username)')
       .eq('id', certificate.class_id)
       .single();
+
+    console.log('Certificate code to be used:', certificate.certificate_code);
 
     // Create certificate modal
     const modal = document.createElement('div');
