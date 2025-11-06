@@ -321,10 +321,141 @@ class AIClassroom {
       // Load assignments overview for this class
       await this.loadClassAssignments(classId);
 
+      // Load student's own submissions for this class
+      await this.loadMySubmissionsForClass(classId);
+
     } catch (error) {
       console.error('Error rendering class detail:', error);
       alert('Failed to load class details');
       this.navigateTo('dashboard');
+    }
+  }
+
+  async loadMySubmissionsForClass(classId) {
+    // This will be rendered in a dedicated section
+    const container = document.getElementById('mySubmissionsList');
+    if (!container) return;
+
+    try {
+      const userId = this.auth.getCurrentUser().id;
+      
+      // Get step IDs for this class
+      const { data: modules } = await this.supabase
+        .from('modules')
+        .select('id')
+        .eq('class_id', classId);
+      
+      if (!modules || modules.length === 0) return;
+      
+      const moduleIds = modules.map(m => m.id);
+      
+      const { data: steps } = await this.supabase
+        .from('steps')
+        .select('id')
+        .in('module_id', moduleIds);
+      
+      if (!steps || steps.length === 0) return;
+      
+      const stepIds = steps.map(s => s.id);
+      
+      // Get assignments for these steps
+      const { data: assignments } = await this.supabase
+        .from('assignments')
+        .select('id, title')
+        .in('step_id', stepIds);
+      
+      if (!assignments || assignments.length === 0) {
+        container.innerHTML = '<div class="loading">No assignments in this class yet.</div>';
+        return;
+      }
+      
+      const assignmentIds = assignments.map(a => a.id);
+      
+      // Get my submissions
+      const { data: subs } = await this.supabase
+        .from('submissions')
+        .select('*')
+        .eq('student_id', userId)
+        .in('assignment_id', assignmentIds)
+        .order('submitted_at', { ascending: false });
+      
+      if (!subs || subs.length === 0) {
+        container.innerHTML = '<div class="loading">You haven\'t submitted any assignments in this class yet.</div>';
+        return;
+      }
+      
+      // Fetch assignment titles and grades
+      for (const sub of subs) {
+        const assignment = assignments.find(a => a.id === sub.assignment_id);
+        sub.assignment_title = assignment?.title || 'Assignment';
+        
+        const { data: grades } = await this.supabase
+          .from('grades')
+          .select('*')
+          .eq('submission_id', sub.id);
+        
+        sub.grade = grades && grades.length > 0 ? grades[0] : null;
+      }
+      
+      // Render my submissions
+      container.innerHTML = subs.map(sub => {
+        const grade = sub.grade;
+        return `
+          <div class="submission-card ${grade ? 'graded' : sub.status}" style="margin-bottom: 1rem;">
+            <div class="submission-header">
+              <div>
+                <div class="student-name" style="font-weight: 600;">${this.escapeHtml(sub.assignment_title)}</div>
+                <div class="submission-time">Submitted ${this.formatDate(sub.submitted_at)}</div>
+              </div>
+              <div class="submission-status-group">
+                ${grade ? `
+                  <div class="grade-badge">
+                    <span class="grade-stars-small">${'⭐'.repeat(grade.score)}</span>
+                    <span class="grade-score-small">${grade.score}/5</span>
+                  </div>
+                ` : `
+                  <span class="status-badge status-${sub.status}">${sub.status}</span>
+                `}
+              </div>
+            </div>
+            
+            ${sub.submission_url ? `
+              <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+                <strong>🔗 URL:</strong> <a href="${sub.submission_url}" target="_blank">${sub.submission_url}</a>
+              </div>
+            ` : ''}
+            
+            ${grade ? `
+              <div style="margin-top: 1rem; padding: 1rem; background: var(--light-bg); border-radius: 0.5rem;">
+                <strong style="display: block; margin-bottom: 0.5rem;">💬 AI Feedback:</strong>
+                <p style="margin: 0; color: var(--text-secondary);">${this.escapeHtml(grade.feedback)}</p>
+                ${grade.ai_strengths ? `
+                  <div style="margin-top: 0.75rem;">
+                    <strong style="color: var(--success-color);">✅ Strengths:</strong>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-secondary);">${this.escapeHtml(grade.ai_strengths)}</p>
+                  </div>
+                ` : ''}
+                ${grade.ai_improvements ? `
+                  <div style="margin-top: 0.75rem;">
+                    <strong style="color: var(--primary-color);">💡 Improvements:</strong>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-secondary);">${this.escapeHtml(grade.ai_improvements)}</p>
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
+            
+            <div style="margin-top: 1rem;">
+              <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${sub.id})">
+                View Full Details
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } catch (error) {
+      console.error('Error loading my submissions:', error);
+      container.innerHTML = '<div class="error">Failed to load submissions</div>';
     }
   }
 
@@ -1220,6 +1351,106 @@ class AIClassroom {
     await this.loadStudentRoster();
     await this.loadAdminStats();
     await this.loadClasses();
+    await this.loadAllSubmissionsAdmin();
+  }
+
+  async loadAllSubmissionsAdmin() {
+    const container = document.getElementById('allSubmissionsAdmin');
+    if (!container) return;
+
+    try {
+      container.innerHTML = '<div class="loading">Loading submissions...</div>';
+
+      // Get all submissions with student and assignment info
+      const { data: subs } = await this.supabase
+        .from('submissions')
+        .select('*')
+        .order('submitted_at', { ascending: false })
+        .limit(50); // Show last 50 submissions
+
+      if (!subs || subs.length === 0) {
+        container.innerHTML = '<div class="loading">No submissions yet.</div>';
+        return;
+      }
+
+      // Fetch details for each submission
+      for (const sub of subs) {
+        // Get student profile
+        const { data: profile } = await this.supabase
+          .from('users_profile')
+          .select('github_username, github_avatar_url')
+          .eq('id', sub.student_id)
+          .maybeSingle();
+        
+        sub.student = profile || { github_username: 'Unknown', github_avatar_url: '' };
+
+        // Get assignment
+        const { data: assignment } = await this.supabase
+          .from('assignments')
+          .select('title')
+          .eq('id', sub.assignment_id)
+          .maybeSingle();
+        
+        sub.assignment_title = assignment?.title || 'Unknown Assignment';
+
+        // Get grade
+        const { data: grades } = await this.supabase
+          .from('grades')
+          .select('*')
+          .eq('submission_id', sub.id);
+        
+        sub.grade = grades && grades.length > 0 ? grades[0] : null;
+      }
+
+      // Render submissions
+      container.innerHTML = subs.map(sub => {
+        const grade = sub.grade;
+        return `
+          <div class="submission-card ${grade ? 'graded' : sub.status}">
+            <div class="submission-header">
+              <div class="student-info">
+                <img src="${sub.student.github_avatar_url || 'https://ui-avatars.com/api/?name=Student'}" 
+                     class="student-avatar" 
+                     alt="${sub.student.github_username}">
+                <div class="student-details">
+                  <div class="student-name">${this.escapeHtml(sub.student.github_username)}</div>
+                  <div class="submission-time">${this.escapeHtml(sub.assignment_title)}</div>
+                  <div class="submission-time">Submitted ${this.formatDate(sub.submitted_at)}</div>
+                </div>
+              </div>
+              <div class="submission-status-group">
+                ${grade ? `
+                  <div class="grade-badge">
+                    <span class="grade-stars-small">${'⭐'.repeat(grade.score)}</span>
+                    <span class="grade-score-small">${grade.score}/5</span>
+                  </div>
+                ` : `
+                  <span class="status-badge status-${sub.status}">${sub.status}</span>
+                `}
+              </div>
+            </div>
+            
+            <div class="submission-actions" style="margin-top: 1rem;">
+              <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${sub.id})">
+                View Details
+              </button>
+              ${!grade && sub.status === 'pending' ? `
+                <button class="btn btn-primary btn-small" onclick="app.manualGradeSubmission(${sub.id})">
+                  Grade Now
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="app.triggerAIGrading(${sub.id})">
+                  🤖 AI Grade
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+      container.innerHTML = '<div class="error">Failed to load submissions</div>';
+    }
   }
 
   async loadAdminStats() {
@@ -2376,45 +2607,55 @@ class AIClassroom {
       document.getElementById('submissionsAssignmentTitle').textContent = assignment?.title || 'Assignment';
 
       // Get all submissions for this assignment
-      const { data: submissions, error } = await this.supabase
+      const { data: subs } = await this.supabase
         .from('submissions')
-        .select(`
-          *,
-          student:users_profile!submissions_student_id_fkey(github_username, github_avatar_url),
-          grade:grades(*)
-        `)
+        .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
 
-      if (error) {
-        // If FK join fails, fetch separately
-        const { data: subs } = await this.supabase
-          .from('submissions')
-          .select('*')
-          .eq('assignment_id', assignmentId)
-          .order('submitted_at', { ascending: false });
+      if (subs && subs.length > 0) {
+        // Fetch student data and grades separately for each submission
+        for (const sub of subs) {
+          // Get profile data
+          const { data: profile } = await this.supabase
+            .from('users_profile')
+            .select('github_username, github_avatar_url, full_name, id')
+            .eq('id', sub.student_id)
+            .maybeSingle();
 
-        if (subs) {
-          // Fetch student data and grades separately
-          for (const sub of subs) {
-            const { data: student } = await this.supabase
+          // If no profile, try to get basic info from a join query
+          if (!profile || !profile.github_username) {
+            // Get user email via a different approach - query from our own user if admin
+            const { data: allUsers } = await this.supabase
               .from('users_profile')
-              .select('github_username, github_avatar_url')
+              .select('id, github_username, github_avatar_url, full_name')
               .eq('id', sub.student_id)
-              .single();
-            sub.student = student;
-
-            const { data: grade } = await this.supabase
-              .from('grades')
-              .select('*')
-              .eq('submission_id', sub.id)
-              .single();
-            sub.grade = grade ? [grade] : [];
+              .maybeSingle();
+            
+            sub.student = {
+              github_username: allUsers?.github_username || `Student ${sub.student_id.substring(0, 8)}`,
+              github_avatar_url: allUsers?.github_avatar_url || `https://ui-avatars.com/api/?name=Student`,
+              full_name: allUsers?.full_name || ''
+            };
+          } else {
+            sub.student = {
+              github_username: profile.github_username,
+              github_avatar_url: profile.github_avatar_url || `https://ui-avatars.com/api/?name=${profile.github_username}`,
+              full_name: profile.full_name || ''
+            };
           }
-          this.renderSubmissionsList(subs);
+
+          // Get grade
+          const { data: grades } = await this.supabase
+            .from('grades')
+            .select('*')
+            .eq('submission_id', sub.id);
+          
+          sub.grade = grades || [];
         }
+        this.renderSubmissionsList(subs);
       } else {
-        this.renderSubmissionsList(submissions || []);
+        this.renderSubmissionsList([]);
       }
 
       this.showModal('viewSubmissionsModal');

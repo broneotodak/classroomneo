@@ -283,6 +283,14 @@
                         <div class="loading">Loading assignments...</div>
                     </div>
                 </div>
+
+                <!-- My Submissions with AI Feedback -->
+                <div class="class-assignments-section">
+                    <h2>📝 My Submissions & Feedback</h2>
+                    <div id="mySubmissionsList" class="submissions-list">
+                        <div class="loading">Loading your submissions...</div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -378,9 +386,19 @@
                         <div class="loading">Loading classes...</div>
                     </div>
                 </div>
+
+                <!-- All Submissions -->
+                <div class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>📝 All Submissions</h2>
+                        <button class="btn btn-primary btn-small" onclick="app.loadAllSubmissionsAdmin()">🔄 Refresh</button>
+                    </div>
+                    <div id="allSubmissionsAdmin" class="submissions-list">
+                        <div class="loading">Loading submissions...</div>
+                    </div>
+                </div>
             </div>
         </section>
-
         <!-- Community/Demo Page -->
         <section id="community" class="page-section">
             <div class="container">
