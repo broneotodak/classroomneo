@@ -720,12 +720,137 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Join Class Section */
-.join-class-section {
+/* My Classes Section */
+.my-classes-section {
     margin-bottom: 3rem;
 }
 
-.join-class-section h2 {
+.my-classes-section h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.my-classes-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.my-class-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.my-class-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.my-class-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.my-class-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.class-badge {
+    background: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.my-class-description {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    min-height: 2.5rem;
+}
+
+.class-progress-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.progress-item {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--light-bg);
+    border-radius: 0.5rem;
+}
+
+.progress-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.progress-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.my-class-progress-bar {
+    height: 8px;
+    background: var(--light-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.my-class-progress-fill {
+    height: 100%;
+    background: var(--gradient);
+    transition: width 0.5s;
+}
+
+.my-class-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.class-status {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.certificate-ready {
+    background: var(--success-color);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Available Classes Section */
+.available-classes-section {
+    margin-bottom: 3rem;
+}
+
+.available-classes-section h2 {
     font-size: 1.875rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
@@ -2746,5 +2871,166 @@ body {
 
 [data-theme="dark"] .grade-display-compact {
     background: var(--light-bg);
+}
+
+/* ========================================== 
+   CLASS DETAIL PAGE
+   ========================================== */
+
+.class-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 2rem 0 3rem;
+}
+
+.class-detail-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.class-detail-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+.certificate-placeholder {
+    display: flex;
+    align-items: center;
+}
+
+.class-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.class-stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.class-modules-section,
+.class-assignments-section {
+    margin-bottom: 3rem;
+}
+
+.class-modules-section h2,
+.class-assignments-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.assignments-overview {
+    display: grid;
+    gap: 1rem;
+}
+
+.assignment-overview-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.assignment-overview-card.graded {
+    border-color: var(--success-color);
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.05), white);
+}
+
+.assignment-overview-card.submitted {
+    border-color: var(--warning-color);
+}
+
+.assignment-overview-card.not-submitted {
+    border-color: var(--error-color);
+}
+
+.assignment-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.assignment-overview-header h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.assignment-grade-badge {
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.not-submitted-badge {
+    background: var(--error-color);
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.assignment-overview-description {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+}
+
+.assignment-overview-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.submitted-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.not-submitted-text {
+    font-size: 0.875rem;
+    color: var(--error-color);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .my-class-card,
+[data-theme="dark"] .class-stat-card,
+[data-theme="dark"] .assignment-overview-card {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .assignment-overview-card.graded {
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.1), var(--card-bg));
+}
+
+[data-theme="dark"] .progress-item {
+    background: var(--light-bg);
+}
+
+/* Available Classes Section */
+.available-classes-section {
+    margin-bottom: 3rem;
+}
+
+.available-classes-section h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 

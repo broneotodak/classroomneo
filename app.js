@@ -172,6 +172,8 @@ class AIClassroom {
     // Dashboard buttons
     document.getElementById('continueBtn')?.addEventListener('click', () => this.handleContinueLearning());
     document.getElementById('backToDashboard')?.addEventListener('click', () => this.navigateTo('dashboard'));
+    document.getElementById('backToDashboardFromClass')?.addEventListener('click', () => this.navigateTo('dashboard'));
+    document.getElementById('downloadCertificate')?.addEventListener('click', () => this.downloadCertificate());
 
     // Community
     document.getElementById('sendMessageBtn')?.addEventListener('click', () => this.handleSendMessage());
@@ -257,10 +259,280 @@ class AIClassroom {
         this.loadMessages();
       } else if (page === 'admin') {
         await this.renderAdminDashboard();
+      } else if (page === 'class-detail') {
+        const classId = params[0];
+        if (classId) {
+          await this.renderClassDetail(parseInt(classId));
+        }
       }
 
       // Scroll to top
       window.scrollTo(0, 0);
+    }
+  }
+
+  // View class detail page
+  async viewClassDetail(classId) {
+    this.navigateTo('class-detail', [classId]);
+  }
+
+  // Render class detail page
+  async renderClassDetail(classId) {
+    try {
+      // Load class data
+      const { data: classData, error: classError } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('id', classId)
+        .single();
+
+      if (classError) throw classError;
+
+      // Update header
+      document.getElementById('classDetailTitle').textContent = classData.name;
+      document.getElementById('classDetailDescription').textContent = classData.description || '';
+
+      // Get progress for this specific class
+      const progress = await this.getClassProgress(classId);
+
+      // Update stats
+      document.getElementById('classModulesCount').textContent = progress.totalModules;
+      document.getElementById('classCompletedCount').textContent = `${progress.completedModules}/${progress.totalModules}`;
+      document.getElementById('classAssignmentsCount').textContent = `${progress.gradedAssignments}/${progress.totalAssignments}`;
+      
+      // Calculate average grade
+      const avgGrade = await this.getAverageGradeForClass(classId);
+      document.getElementById('classAvgGrade').textContent = avgGrade ? `${avgGrade}/5` : '--';
+
+      // Show certificate if eligible
+      const certSection = document.getElementById('certificateSection');
+      if (progress.certificateEligible) {
+        certSection.style.display = 'block';
+      } else {
+        certSection.style.display = 'none';
+      }
+
+      // Load modules for this class
+      await this.loadClassModules(classId);
+
+      // Load assignments overview for this class
+      await this.loadClassAssignments(classId);
+
+    } catch (error) {
+      console.error('Error rendering class detail:', error);
+      alert('Failed to load class details');
+      this.navigateTo('dashboard');
+    }
+  }
+
+  async getAverageGradeForClass(classId) {
+    const userId = this.auth.getCurrentUser().id;
+    
+    const stepIds = await this.getStepIdsForClass(classId);
+    const { data: assignments } = await this.supabase
+      .from('assignments')
+      .select('id')
+      .in('step_id', stepIds);
+
+    if (!assignments || assignments.length === 0) return null;
+
+    const { data: submissions } = await this.supabase
+      .from('submissions')
+      .select('id')
+      .eq('student_id', userId)
+      .in('assignment_id', assignments.map(a => a.id));
+
+    if (!submissions || submissions.length === 0) return null;
+
+    const { data: grades } = await this.supabase
+      .from('grades')
+      .select('score')
+      .in('submission_id', submissions.map(s => s.id));
+
+    if (!grades || grades.length === 0) return null;
+
+    const avg = grades.reduce((sum, g) => sum + g.score, 0) / grades.length;
+    return avg.toFixed(1);
+  }
+
+  async loadClassModules(classId) {
+    const container = document.getElementById('classModulesList');
+    if (!container) return;
+
+    try {
+      const { data: modules, error } = await this.supabase
+        .from('modules')
+        .select(`
+          *,
+          steps:steps(*)
+        `)
+        .eq('class_id', classId)
+        .eq('is_active', true)
+        .order('order_number');
+
+      if (error) throw error;
+
+      if (!modules || modules.length === 0) {
+        container.innerHTML = '<div class="loading">No modules in this class yet.</div>';
+        return;
+      }
+
+      // Render module cards (similar to existing renderModulesList)
+      const userId = this.auth.getCurrentUser().id;
+      
+      container.innerHTML = await Promise.all(
+        modules.map(async module => {
+          const { data: allSteps } = await this.supabase
+            .from('steps')
+            .select('id')
+            .eq('module_id', module.id);
+
+          const { data: completedSteps } = await this.supabase
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('module_id', module.id)
+            .eq('status', 'completed');
+
+          const totalSteps = allSteps ? allSteps.length : 0;
+          const completed = completedSteps ? completedSteps.length : 0;
+          const completionPercentage = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
+          const isCompleted = completed === totalSteps && totalSteps > 0;
+          const buttonText = isCompleted ? '🔄 Review' : (completed > 0 ? 'Continue' : 'Start');
+          const buttonClass = isCompleted ? 'btn-secondary' : 'btn-primary';
+
+          return `
+            <div class="module-card ${isCompleted ? 'module-completed' : ''}" data-module-id="${module.id}">
+              <div class="module-card-header">
+                <h3>${module.title}</h3>
+                <span class="module-badge ${isCompleted ? 'badge-completed' : ''}">${completed}/${totalSteps} steps</span>
+              </div>
+              <p class="module-description">${module.description || ''}</p>
+              <div class="module-progress-bar">
+                <div class="module-progress-fill" style="width: ${completionPercentage}%"></div>
+              </div>
+              <div class="module-card-footer">
+                <span class="module-progress-text">
+                  ${isCompleted ? '✅ Completed' : `${completionPercentage}% complete`}
+                </span>
+                <button class="btn ${buttonClass} btn-small" onclick="app.startModuleFromClass(${module.id}, '${module.slug}', ${classId})">
+                  ${buttonText} →
+                </button>
+              </div>
+            </div>
+          `;
+        })
+      ).then(cards => cards.join(''));
+
+    } catch (error) {
+      console.error('Error loading class modules:', error);
+      container.innerHTML = '<div class="error">Failed to load modules.</div>';
+    }
+  }
+
+  async startModuleFromClass(moduleId, moduleSlug, classId) {
+    // Store current class for navigation
+    this.currentClassId = classId;
+    
+    // Find first step to navigate to
+    const { data: steps } = await this.supabase
+      .from('steps')
+      .select('slug')
+      .eq('module_id', moduleId)
+      .order('order_number')
+      .limit(1);
+
+    if (steps && steps.length > 0) {
+      this.navigateTo('learning', [moduleSlug, steps[0].slug]);
+    }
+  }
+
+  async loadClassAssignments(classId) {
+    const container = document.getElementById('classAssignmentsList');
+    if (!container) return;
+
+    try {
+      const userId = this.auth.getCurrentUser().id;
+      const stepIds = await this.getStepIdsForClass(classId);
+
+      const { data: assignments } = await this.supabase
+        .from('assignments')
+        .select('*')
+        .in('step_id', stepIds)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (!assignments || assignments.length === 0) {
+        container.innerHTML = '<div class="loading">No assignments in this class yet.</div>';
+        return;
+      }
+
+      // Get submissions for these assignments
+      const { data: submissions } = await this.supabase
+        .from('submissions')
+        .select('*, grades(*)')
+        .eq('student_id', userId)
+        .in('assignment_id', assignments.map(a => a.id));
+
+      const submissionMap = {};
+      (submissions || []).forEach(s => {
+        submissionMap[s.assignment_id] = s;
+      });
+
+      container.innerHTML = assignments.map(assignment => {
+        const submission = submissionMap[assignment.id];
+        const grade = submission && submission.grades && submission.grades.length > 0 ? submission.grades[0] : null;
+
+        return `
+          <div class="assignment-overview-card ${grade ? 'graded' : (submission ? 'submitted' : 'not-submitted')}">
+            <div class="assignment-overview-header">
+              <h4>${this.escapeHtml(assignment.title)}</h4>
+              ${grade ? 
+                `<div class="assignment-grade-badge">${'⭐'.repeat(grade.score)} ${grade.score}/5</div>` :
+                (submission ? 
+                  `<span class="status-badge status-${submission.status}">${submission.status}</span>` :
+                  '<span class="not-submitted-badge">Not Submitted</span>'
+                )
+              }
+            </div>
+            <p class="assignment-overview-description">${this.escapeHtml(assignment.description || '')}</p>
+            <div class="assignment-overview-footer">
+              ${submission ?
+                `<span class="submitted-date">Submitted ${this.formatDate(submission.submitted_at)}</span>` :
+                '<span class="not-submitted-text">Awaiting submission</span>'
+              }
+              <button class="btn btn-${grade ? 'secondary' : 'primary'} btn-small" onclick="app.goToAssignmentStep(${assignment.step_id})">
+                ${grade ? 'View Feedback' : (submission ? 'View Submission' : 'Submit Now')} →
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading class assignments:', error);
+      container.innerHTML = '<div class="error">Failed to load assignments.</div>';
+    }
+  }
+
+  async goToAssignmentStep(stepId) {
+    // Get step and module info
+    const { data: step } = await this.supabase
+      .from('steps')
+      .select('slug, module_id')
+      .eq('id', stepId)
+      .single();
+
+    if (!step) return;
+
+    const { data: module } = await this.supabase
+      .from('modules')
+      .select('slug')
+      .eq('id', step.module_id)
+      .single();
+
+    if (module) {
+      this.navigateTo('learning', [module.slug, step.slug]);
     }
   }
 
@@ -303,47 +575,261 @@ class AIClassroom {
   async renderDashboard() {
     if (!this.auth.isAuthenticated()) return;
 
+    // Load user's enrolled classes
+    await this.loadEnrolledClasses();
+    
+    // Load available classes (not enrolled)
+    await this.loadAvailableClassesForDashboard();
+    
+    // Calculate overall stats across all classes
+    await this.calculateOverallStats();
+  }
+
+  async loadEnrolledClasses() {
+    const container = document.getElementById('myClassesList');
+    if (!container) return;
+
+    try {
+      const userId = this.auth.getCurrentUser().id;
+      
+      // Get enrolled classes with progress
+      const { data: enrollments, error } = await this.supabase
+        .from('class_enrollments')
+        .select(`
+          *,
+          class:classes(*)
+        `)
+        .eq('student_id', userId)
+        .eq('status', 'active')
+        .order('enrolled_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!enrollments || enrollments.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <h3>No Classes Yet</h3>
+            <p>Join a class below to start learning!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render enrolled class cards
+      container.innerHTML = await Promise.all(
+        enrollments.map(async enrollment => {
+          const classData = enrollment.class;
+          const progress = await this.getClassProgress(classData.id);
+          
+          return `
+            <div class="my-class-card" onclick="app.viewClassDetail(${classData.id})">
+              <div class="my-class-header">
+                <h3>${this.escapeHtml(classData.name)}</h3>
+                <span class="class-badge">${classData.is_active ? 'Active' : 'Ended'}</span>
+              </div>
+              <p class="my-class-description">${this.escapeHtml(classData.description || '')}</p>
+              
+              <div class="class-progress-overview">
+                <div class="progress-item">
+                  <span class="progress-label">Modules</span>
+                  <span class="progress-value">${progress.completedModules}/${progress.totalModules}</span>
+                </div>
+                <div class="progress-item">
+                  <span class="progress-label">Progress</span>
+                  <span class="progress-value">${progress.completionPercentage}%</span>
+                </div>
+                <div class="progress-item">
+                  <span class="progress-label">Assignments</span>
+                  <span class="progress-value">${progress.gradedAssignments}/${progress.totalAssignments}</span>
+                </div>
+              </div>
+              
+              <div class="my-class-progress-bar">
+                <div class="my-class-progress-fill" style="width: ${progress.completionPercentage}%"></div>
+              </div>
+              
+              <div class="my-class-footer">
+                ${progress.certificateEligible ? 
+                  '<span class="certificate-ready">🎓 Certificate Ready!</span>' : 
+                  `<span class="class-status">${progress.completionPercentage}% Complete</span>`
+                }
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); app.viewClassDetail(${classData.id})">
+                  View Class →
+                </button>
+              </div>
+            </div>
+          `;
+        })
+      ).then(cards => cards.join(''));
+
+    } catch (error) {
+      console.error('Error loading enrolled classes:', error);
+      container.innerHTML = '<div class="error">Failed to load your classes.</div>';
+    }
+  }
+
+  async getClassProgress(classId) {
+    const userId = this.auth.getCurrentUser().id;
+    
+    // Get modules count
+    const { data: modules } = await this.supabase
+      .from('modules')
+      .select('id')
+      .eq('class_id', classId)
+      .eq('is_active', true);
+
+    const totalModules = modules ? modules.length : 0;
+
+    // Get completed modules (where all steps are completed)
+    let completedModules = 0;
+    if (modules) {
+      for (const module of modules) {
+        const { data: allSteps } = await this.supabase
+          .from('steps')
+          .select('id')
+          .eq('module_id', module.id);
+
+        const { data: completedSteps } = await this.supabase
+          .from('user_progress')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('module_id', module.id)
+          .eq('status', 'completed');
+
+        if (allSteps && completedSteps && allSteps.length === completedSteps.length && allSteps.length > 0) {
+          completedModules++;
+        }
+      }
+    }
+
+    // Get assignments count
+    const { data: assignments } = await this.supabase
+      .from('assignments')
+      .select('id, step_id')
+      .in('step_id', await this.getStepIdsForClass(classId));
+
+    const totalAssignments = assignments ? assignments.length : 0;
+
+    // Get graded assignments
+    const { data: submissions } = await this.supabase
+      .from('submissions')
+      .select('id, assignment_id')
+      .eq('student_id', userId)
+      .in('assignment_id', assignments ? assignments.map(a => a.id) : []);
+
+    const { data: grades } = await this.supabase
+      .from('grades')
+      .select('submission_id')
+      .in('submission_id', submissions ? submissions.map(s => s.id) : []);
+
+    const gradedAssignments = grades ? grades.length : 0;
+
+    const completionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+    const certificateEligible = completedModules === totalModules && gradedAssignments === totalAssignments && totalAssignments > 0;
+
+    return {
+      totalModules,
+      completedModules,
+      totalAssignments,
+      gradedAssignments,
+      completionPercentage,
+      certificateEligible
+    };
+  }
+
+  async getStepIdsForClass(classId) {
+    const { data: steps } = await this.supabase
+      .from('steps')
+      .select('id, module_id')
+      .in('module_id', 
+        await this.supabase
+          .from('modules')
+          .select('id')
+          .eq('class_id', classId)
+          .then(res => res.data ? res.data.map(m => m.id) : [])
+      );
+    
+    return steps ? steps.map(s => s.id) : [];
+  }
+
+  async loadAvailableClassesForDashboard() {
+    const container = document.getElementById('availableClassesList');
+    if (!container) return;
+
+    try {
+      const userId = this.auth.getCurrentUser().id;
+      
+      // Get all active classes
+      const { data: allClasses } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      // Get enrolled class IDs
+      const { data: enrollments } = await this.supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .eq('student_id', userId)
+        .eq('status', 'active');
+
+      const enrolledIds = new Set((enrollments || []).map(e => e.class_id));
+      const availableClasses = (allClasses || []).filter(c => !enrolledIds.has(c.id));
+
+      if (availableClasses.length === 0) {
+        container.innerHTML = '<div class="loading">No new classes available at the moment.</div>';
+        return;
+      }
+
+      // Get trainer info
+      const trainerIds = [...new Set(availableClasses.map(c => c.trainer_id).filter(Boolean))];
+      const { data: trainers } = await this.supabase
+        .from('users_profile')
+        .select('id, github_username')
+        .in('id', trainerIds);
+
+      const trainerMap = {};
+      (trainers || []).forEach(t => trainerMap[t.id] = t);
+
+      container.innerHTML = availableClasses.map(cls => {
+        const trainer = trainerMap[cls.trainer_id];
+        return `
+          <div class="available-class-card">
+            <div class="available-class-header">
+              <div class="available-class-title">${this.escapeHtml(cls.name)}</div>
+              <div class="available-class-trainer">👨‍🏫 ${this.escapeHtml(trainer?.github_username || 'Staff')}</div>
+            </div>
+            ${cls.description ? `<div class="available-class-description">${this.escapeHtml(cls.description)}</div>` : ''}
+            <div class="available-class-meta">
+              <div class="class-meta-item">
+                <span>📅</span>
+                <span>Starts: ${cls.start_date ? new Date(cls.start_date).toLocaleDateString() : 'TBD'}</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-small" onclick="app.joinClass(${cls.id}, '${this.escapeHtml(cls.name).replace(/'/g, "\\'")}')">
+              Join Class
+            </button>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading available classes:', error);
+      container.innerHTML = '<div class="error">Failed to load classes.</div>';
+    }
+  }
+
+  async calculateOverallStats() {
     const summary = this.progress.getOverallProgress();
     const timeRemaining = this.progress.getEstimatedTimeRemaining();
-    const nextStep = this.progress.getNextStep();
 
-    // Update progress cards
     document.getElementById('overallProgress').textContent = `${summary.overallPercentage}%`;
     document.getElementById('completedSteps').textContent = `${summary.completedSteps}/${summary.totalSteps}`;
     document.getElementById('timeRemaining').textContent = timeRemaining.formatted;
-
-    // Show next step or completion
-    if (nextStep) {
-      document.getElementById('currentModule').textContent = nextStep.module.title.split(' ')[0];
-      document.getElementById('nextStepTitle').textContent = nextStep.step.title;
-      document.getElementById('nextStepModule').textContent = `${nextStep.module.title} • ${nextStep.step.estimated_minutes} min`;
-      document.getElementById('nextStepCard').style.display = 'block';
-      document.getElementById('completedCard').style.display = 'none';
-    } else {
-      // Get class name for completion message
-      const modules = this.progress?.modules || [];
-      const className = modules.length > 0 && modules[0].class 
-        ? modules[0].class.name 
-        : 'AI Classroom';
-      
-      const completedCard = document.getElementById('completedCard');
-      if (completedCard) {
-        const messagePara = completedCard.querySelector('p');
-        if (messagePara) {
-          messagePara.textContent = `You've completed all modules in ${className}!`;
-        }
-      }
-      
-      document.getElementById('nextStepCard').style.display = 'none';
-      document.getElementById('completedCard').style.display = 'block';
-    }
-
-    // Show available classes for everyone (students, trainers, admins can all join)
-    await this.loadAvailableClasses();
-    document.getElementById('joinClassSection').style.display = 'block';
-
-    // Render modules list
-    this.renderModulesList();
+    
+    const nextStep = this.progress.getNextStep();
+    document.getElementById('currentModule').textContent = nextStep ? nextStep.module.title.split(' ')[0] : '--';
   }
 
   // Render modules list
