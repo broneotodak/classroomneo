@@ -2754,8 +2754,8 @@ Download feature coming in next update!
 
   // Dark mode functionality
   initDarkMode() {
-    // Check localStorage for saved theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    // Check localStorage for saved theme (default is now dark)
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     this.updateDarkModeIcon(savedTheme);
   }
@@ -2772,7 +2772,7 @@ Download feature coming in next update!
   updateDarkModeIcon(theme) {
     const icon = document.querySelector('.theme-icon');
     if (icon) {
-      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      icon.textContent = theme === 'light' ? '🌙' : '☀️';
     }
   }
 }
