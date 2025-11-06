@@ -120,7 +120,12 @@ class ProgressManager {
       const existing = this.getStepProgress(stepId);
 
       if (existing) {
-        // Update existing progress
+        // DON'T update if already completed - allow review without losing progress
+        if (existing.status === 'completed') {
+          return existing;
+        }
+        
+        // Update existing progress to in_progress (only if not completed)
         const { data, error } = await this.supabase
           .from('user_progress')
           .update({

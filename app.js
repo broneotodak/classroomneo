@@ -1104,12 +1104,15 @@ class AIClassroom {
   async renderStepContent(module, step) {
     this.currentStep = step;
 
-    // Mark as in progress
-    await this.progress.startStep(module.id, step.id);
-
     const container = document.getElementById('stepContent');
     const stepProgress = this.progress.getStepProgress(step.id);
     const isCompleted = stepProgress?.status === 'completed';
+    
+    // Only mark as in_progress if it's not already completed
+    // This allows students to review completed content without losing progress
+    if (!isCompleted) {
+      await this.progress.startStep(module.id, step.id);
+    }
 
     // Check if this step has an assignment
     const assignment = await this.loadAssignmentForStep(step.id);
