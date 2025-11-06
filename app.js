@@ -2635,6 +2635,123 @@ class AIClassroom {
     `;
   }
 
+  // ==========================================
+  // CERTIFICATE SYSTEM
+  // ==========================================
+
+  async downloadCertificate() {
+    try {
+      const userId = this.auth.getCurrentUser().id;
+      const classId = this.currentClassId || parseInt(window.location.hash.split('/')[1]);
+      
+      if (!classId) {
+        alert('No class selected');
+        return;
+      }
+
+      // Check if certificate already exists
+      let { data: certificate } = await this.supabase
+        .from('certificates')
+        .select('*')
+        .eq('student_id', userId)
+        .eq('class_id', classId)
+        .single();
+
+      // If not, generate it
+      if (!certificate) {
+        certificate = await this.generateCertificate(userId, classId);
+      }
+
+      if (certificate) {
+        // Show certificate modal
+        await this.showCertificate(certificate);
+      }
+
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to generate certificate. Please try again.');
+    }
+  }
+
+  async generateCertificate(studentId, classId) {
+    try {
+      // Get class data
+      const { data: classData } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('id', classId)
+        .single();
+
+      // Get progress
+      const progress = await this.getClassProgress(classId);
+
+      // Get average grade
+      const avgGrade = await this.getAverageGradeForClass(classId);
+
+      // Generate unique certificate code
+      const certCode = `CERT-${classId}-${studentId.substring(0, 8)}-${Date.now()}`;
+
+      // Create certificate record
+      const { data: certificate, error } = await this.supabase
+        .from('certificates')
+        .insert({
+          student_id: studentId,
+          class_id: classId,
+          completion_date: new Date().toISOString(),
+          modules_completed: progress.completedModules,
+          total_modules: progress.totalModules,
+          assignments_graded: progress.gradedAssignments,
+          total_assignments: progress.totalAssignments,
+          average_grade: avgGrade ? parseFloat(avgGrade) : null,
+          certificate_code: certCode
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      alert('🎓 Certificate generated successfully!');
+      return certificate;
+
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+      throw error;
+    }
+  }
+
+  async showCertificate(certificate) {
+    // Get student and class info
+    const { data: student } = await this.supabase
+      .from('users_profile')
+      .select('*')
+      .eq('id', certificate.student_id)
+      .single();
+
+    const { data: classData } = await this.supabase
+      .from('classes')
+      .select('*, trainer:users_profile!classes_trainer_id_fkey(github_username)')
+      .eq('id', certificate.class_id)
+      .single();
+
+    // For now, just show alert with certificate info
+    // In production, this would open a beautiful certificate modal with download option
+    const certInfo = `
+🎓 CERTIFICATE OF COMPLETION
+
+Student: ${student?.github_username || 'Student'}
+Class: ${classData?.name || 'Class'}
+Completed: ${new Date(certificate.completion_date).toLocaleDateString()}
+Modules: ${certificate.modules_completed}/${certificate.total_modules}
+Assignments: ${certificate.assignments_graded}/${certificate.total_assignments}
+Average Grade: ${certificate.average_grade ? certificate.average_grade.toFixed(1) : 'N/A'}/5
+Certificate ID: ${certificate.certificate_code}
+
+Download feature coming in next update!
+    `;
+
+    alert(certInfo);
+  }
+
   // Dark mode functionality
   initDarkMode() {
     // Check localStorage for saved theme
