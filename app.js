@@ -1406,13 +1406,24 @@ class AIClassroom {
       // Fetch details for each submission
       for (const sub of subs) {
         // Get student profile
-        const { data: profile } = await this.supabase
+        const { data: profile, error: profileError } = await this.supabase
           .from('users_profile')
-          .select('github_username, github_avatar_url')
+          .select('github_username, github_avatar_url, full_name')
           .eq('id', sub.student_id)
           .maybeSingle();
         
-        sub.student = profile || { github_username: 'Unknown', github_avatar_url: '' };
+        // Debug log
+        if (!profile || !profile.github_username) {
+          console.warn(`Missing profile for student ${sub.student_id}:`, profile, profileError);
+        }
+        
+        sub.student = profile && profile.github_username 
+          ? profile 
+          : { 
+              github_username: profile?.github_username || 'Unknown Student', 
+              github_avatar_url: profile?.github_avatar_url || 'https://ui-avatars.com/api/?name=Student',
+              full_name: profile?.full_name || ''
+            };
 
         // Get assignment
         const { data: assignment } = await this.supabase
