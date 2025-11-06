@@ -21,6 +21,13 @@ class AuthManager {
         this.currentUser = session.user;
         await this.updateLastLogin();
         this.onAuthStateChange(true);
+        
+        // Redirect to dashboard if on home page
+        setTimeout(() => {
+          if (window.location.hash === '' || window.location.hash === '#home' || window.location.hash === '#') {
+            window.location.hash = '#dashboard';
+          }
+        }, 100);
       }
 
       // Listen for auth changes

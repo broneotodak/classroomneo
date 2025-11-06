@@ -60,9 +60,9 @@
     background-color: var(--dark-bg);
 }
 
-/* Dark mode hero section */
-[data-theme="dark"] .hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
+/* Light mode hero section */
+[data-theme="light"] .hero {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
 }
 
 /* Dark mode for all cards */
@@ -427,7 +427,7 @@ body {
 
 .hero {
     padding: 5rem 0;
-    background: var(--gradient);
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
     color: white;
 }
 
@@ -494,13 +494,17 @@ body {
 
 .hero .btn-primary {
     background: white;
-    color: var(--primary-color);
+    color: #1e3a8a;
 }
 
 .hero .btn-secondary {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border-color: white;
+}
+
+[data-theme="light"] .hero .btn-primary {
+    color: var(--primary-color);
 }
 
 /* Tech Stack Cards */
