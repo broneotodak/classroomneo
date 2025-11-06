@@ -2273,7 +2273,7 @@ class AIClassroom {
         .update({ status: 'grading' })
         .eq('id', submissionId);
 
-      // Get submission and assignment data
+      // Get submission and assignment data with context
       const { data: submission } = await this.supabase
         .from('submissions')
         .select('*')
@@ -2282,7 +2282,7 @@ class AIClassroom {
 
       const { data: assignment } = await this.supabase
         .from('assignments')
-        .select('*')
+        .select('*, steps(*, modules(*))')
         .eq('id', submission.assignment_id)
         .single();
 
@@ -2290,17 +2290,28 @@ class AIClassroom {
         throw new Error('Submission or assignment not found');
       }
 
+      // Build context for AI
+      const moduleContext = assignment.steps?.modules 
+        ? `${assignment.steps.modules.title} - ${assignment.steps.modules.description}`
+        : '';
+      
+      const stepContext = assignment.steps
+        ? `Step ${assignment.steps.order_index}: ${assignment.steps.title}\n${assignment.steps.content || ''}`
+        : '';
+
       // Initialize AI grader (uses serverless function)
       const aiGrader = new AIGrader();
 
-      // Grade the submission
+      // Grade the submission with full context
       const gradeData = await aiGrader.gradeSubmission({
         assignment_title: assignment.title,
         instructions: assignment.instructions,
         rubric: assignment.ai_grading_rubric,
         submission_url: submission.submission_url,
         file_url: submission.file_url,
-        student_notes: submission.notes
+        student_notes: submission.notes,
+        module_context: moduleContext,
+        step_context: stepContext
       });
 
       // Save grade to database

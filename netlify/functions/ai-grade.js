@@ -17,10 +17,12 @@ exports.handler = async (event, context) => {
       rubric,
       submission_url,
       file_url,
-      student_notes
+      student_notes,
+      module_context,
+      step_context
     } = JSON.parse(event.body);
 
-    // Build the grading prompt
+    // Build enhanced grading prompt with context
     const prompt = `
 Grade this student assignment and return ONLY a JSON object with this exact structure:
 {
@@ -36,21 +38,33 @@ ASSIGNMENT: ${assignment_title}
 INSTRUCTIONS:
 ${instructions}
 
+${module_context ? `MODULE CONTEXT:
+This assignment is part of: ${module_context}
+` : ''}
+
+${step_context ? `LEARNING OBJECTIVES:
+${step_context}
+` : ''}
+
 GRADING RUBRIC:
-${rubric || 'Grade based on completeness, quality, and effort. Be fair and encouraging.'}
+${rubric || 'Grade based on completeness, quality, effort, and how well it demonstrates the learning objectives. Be fair and encouraging.'}
 
 STUDENT SUBMISSION:
 ${submission_url ? `URL: ${submission_url}` : ''}
 ${file_url ? `File: ${file_url}` : ''}
 ${student_notes ? `Student Notes: ${student_notes}` : ''}
 
-Important:
-- Visit the URL if provided and analyze the work
-- Be constructive and encouraging
-- Provide specific examples
-- Grade fairly but kindly
-- Focus on learning progress
-- Return ONLY the JSON object, no other text
+GRADING GUIDELINES:
+1. Visit the URL if provided and thoroughly analyze the work
+2. Check if the submission meets the learning objectives
+3. Evaluate technical implementation quality
+4. Consider creativity and effort
+5. Be constructive, encouraging, and specific
+6. Provide actionable feedback for improvement
+7. Relate feedback to the module context and learning goals
+8. Grade fairly: 5=Excellent, 4=Good, 3=Satisfactory, 2=Needs Work, 1=Incomplete
+
+Return ONLY the JSON object, no other text.
 `.trim();
 
     // Call OpenAI API
