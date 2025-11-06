@@ -2603,3 +2603,148 @@ body {
     background: var(--light-bg);
 }
 
+/* Submission Details View */
+.submission-details-view {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.submission-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-section {
+    padding: 1.5rem;
+    background: var(--light-bg);
+    border-radius: 0.75rem;
+}
+
+.detail-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.detail-section h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.detail-section h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.detail-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.detail-link {
+    display: block;
+    color: var(--primary-color);
+    text-decoration: none;
+    word-break: break-all;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.detail-link:hover {
+    text-decoration: underline;
+}
+
+.detail-notes {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.file-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.submission-image-full {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-md);
+}
+
+.file-icon-large {
+    font-size: 4rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+.file-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.grade-section {
+    background: linear-gradient(to bottom, rgba(16, 185, 129, 0.1), var(--light-bg));
+    border: 2px solid var(--success-color);
+}
+
+.grade-display-compact {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.grade-stars-large {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.grade-score-large {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.feedback-detail {
+    margin-top: 1rem;
+}
+
+.feedback-detail p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.grader-info {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.pending-message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .detail-section {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .grade-display-compact {
+    background: var(--light-bg);
+}
+

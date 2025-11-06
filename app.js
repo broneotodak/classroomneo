@@ -205,6 +205,10 @@ class AIClassroom {
     // View submissions modal
     document.getElementById('closeViewSubmissions')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
     document.getElementById('closeSubmissionsModal')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
+    
+    // View individual submission modal
+    document.getElementById('closeViewSubmission')?.addEventListener('click', () => this.hideModal('viewSubmissionModal'));
+    document.getElementById('closeSubmissionDetailsModal')?.addEventListener('click', () => this.hideModal('viewSubmissionModal'));
 
     // Handle browser back/forward
     window.addEventListener('popstate', () => this.handleRoute());
@@ -1986,8 +1990,134 @@ class AIClassroom {
   }
 
   async showSubmission(submissionId) {
-    // Reuse the viewAllSubmissions logic but for single submission
-    alert('Individual submission view coming soon!');
+    try {
+      // Load submission with grade
+      const { data: submission, error: subError } = await this.supabase
+        .from('submissions')
+        .select('*')
+        .eq('id', submissionId)
+        .single();
+
+      if (subError) throw subError;
+
+      const { data: grade } = await this.supabase
+        .from('grades')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .single();
+
+      const { data: assignment } = await this.supabase
+        .from('assignments')
+        .select('title')
+        .eq('id', submission.assignment_id)
+        .single();
+
+      this.renderSubmissionDetails(submission, grade, assignment);
+      this.showModal('viewSubmissionModal');
+
+    } catch (error) {
+      console.error('Error loading submission:', error);
+      alert('Failed to load submission details.');
+    }
+  }
+
+  renderSubmissionDetails(submission, grade, assignment) {
+    const container = document.getElementById('submissionDetails');
+
+    container.innerHTML = `
+      <div class="submission-detail-card">
+        <div class="detail-section">
+          <h3>${assignment?.title || 'Assignment'}</h3>
+          <div class="detail-meta">
+            Submitted on ${this.formatDate(submission.submitted_at)}
+            ${grade ? ` • Graded on ${this.formatDate(grade.created_at)}` : ''}
+          </div>
+        </div>
+
+        ${submission.submission_url ? `
+          <div class="detail-section">
+            <h4>🔗 Submitted URL</h4>
+            <a href="${submission.submission_url}" target="_blank" class="detail-link">
+              ${submission.submission_url}
+            </a>
+            <a href="${submission.submission_url}" target="_blank" class="btn btn-secondary btn-small" style="margin-top: 0.5rem;">
+              Open in New Tab →
+            </a>
+          </div>
+        ` : ''}
+
+        ${submission.file_url ? `
+          <div class="detail-section">
+            <h4>📎 Uploaded File</h4>
+            <div class="file-display">
+              ${submission.file_type?.startsWith('image/') ? `
+                <img src="${submission.file_url}" alt="Submission" class="submission-image-full">
+              ` : `
+                <div class="file-icon-large">📄</div>
+              `}
+              <div class="file-meta">
+                <strong>${submission.file_name || 'Uploaded File'}</strong>
+                <a href="${submission.file_url}" target="_blank" class="btn btn-secondary btn-small">
+                  Download File
+                </a>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        ${submission.notes ? `
+          <div class="detail-section">
+            <h4>📝 Your Notes</h4>
+            <p class="detail-notes">${this.escapeHtml(submission.notes)}</p>
+          </div>
+        ` : ''}
+
+        <div class="detail-section">
+          <h4>Status</h4>
+          <span class="status-badge status-${submission.status}">${submission.status}</span>
+        </div>
+
+        ${grade ? `
+          <div class="detail-section grade-section">
+            <h4>Your Grade</h4>
+            <div class="grade-display-compact">
+              <div class="grade-stars-large">${'⭐'.repeat(grade.score)}${'☆'.repeat(5 - grade.score)}</div>
+              <div class="grade-score-large">${grade.score}/5 - ${this.getGradeLabel(grade.score)}</div>
+            </div>
+            
+            <div class="feedback-detail">
+              <h5>📝 Feedback</h5>
+              <p>${this.escapeHtml(grade.feedback)}</p>
+              
+              ${grade.ai_strengths ? `
+                <h5>✅ What You Did Well</h5>
+                <p>${this.escapeHtml(grade.ai_strengths)}</p>
+              ` : ''}
+              
+              ${grade.ai_improvements ? `
+                <h5>💡 How to Improve</h5>
+                <p>${this.escapeHtml(grade.ai_improvements)}</p>
+              ` : ''}
+              
+              ${grade.ai_analysis ? `
+                <h5>🔍 Detailed Analysis</h5>
+                <p>${this.escapeHtml(grade.ai_analysis)}</p>
+              ` : ''}
+            </div>
+            
+            <div class="grader-info">
+              Graded by ${grade.grader_type === 'ai' ? '🤖 AI Assistant' : '👨‍🏫 Instructor'}
+            </div>
+          </div>
+        ` : `
+          <div class="detail-section">
+            <div class="pending-message">
+              ${submission.status === 'grading' ? '🤖 AI is currently grading your work...' : '⏳ Waiting for review'}
+            </div>
+          </div>
+        `}
+      </div>
+    `;
   }
 
   // Dark mode functionality
