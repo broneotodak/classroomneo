@@ -2945,6 +2945,20 @@ class AIClassroom {
         .eq('id', submission.assignment_id)
         .single();
 
+      // Get student profile
+      const { data: studentProfile } = await this.supabase
+        .from('users_profile')
+        .select('github_username, github_avatar_url, full_name')
+        .eq('id', submission.student_id)
+        .maybeSingle();
+
+      // Attach student info to submission
+      submission.student = studentProfile || {
+        github_username: `Student ${submission.student_id.substring(0, 8)}`,
+        github_avatar_url: '',
+        full_name: ''
+      };
+
       this.renderSubmissionDetails(submission, grade, assignment);
       this.showModal('viewSubmissionModal');
 
@@ -2956,10 +2970,20 @@ class AIClassroom {
 
   renderSubmissionDetails(submission, grade, assignment) {
     const container = document.getElementById('submissionDetails');
+    const student = submission.student || {};
 
     container.innerHTML = `
       <div class="submission-detail-card">
         <div class="detail-section">
+          <div class="student-info" style="margin-bottom: 1rem;">
+            <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.github_username || 'Student')}" 
+                 class="student-avatar" 
+                 alt="${student.github_username}">
+            <div class="student-details">
+              <div class="student-name">${this.escapeHtml(student.github_username || 'Student')}</div>
+              ${student.full_name ? `<div class="student-email">${this.escapeHtml(student.full_name)}</div>` : ''}
+            </div>
+          </div>
           <h3>${assignment?.title || 'Assignment'}</h3>
           <div class="detail-meta">
             Submitted on ${this.formatDate(submission.submitted_at)}
@@ -3041,6 +3065,16 @@ class AIClassroom {
             <div class="grader-info">
               Graded by ${grade.grader_type === 'ai' ? '🤖 AI Assistant' : '👨‍🏫 Instructor'}
             </div>
+
+            ${grade.score < 5 ? `
+              <div style="margin-top: 1.5rem; padding: 1rem; background: var(--warning-bg); border-radius: 0.5rem; border-left: 4px solid var(--warning-color);">
+                <strong>💪 Want to improve?</strong>
+                <p style="margin: 0.5rem 0;">You can resubmit this assignment to try for a better grade!</p>
+                <button class="btn btn-primary btn-small" onclick="app.resubmitAssignment(${submission.assignment_id}, ${submission.id})" style="margin-top: 0.5rem;">
+                  🔄 Resubmit Assignment
+                </button>
+              </div>
+            ` : ''}
           </div>
         ` : `
           <div class="detail-section">
@@ -3051,6 +3085,50 @@ class AIClassroom {
         `}
       </div>
     `;
+  }
+
+  // Resubmit assignment
+  async resubmitAssignment(assignmentId, oldSubmissionId) {
+    try {
+      const confirmed = confirm('Are you sure you want to resubmit this assignment? Your previous submission will be archived and you\'ll need to submit new work.');
+      
+      if (!confirmed) return;
+
+      // Archive the old submission (mark as superseded)
+      await this.supabase
+        .from('submissions')
+        .update({ status: 'superseded' })
+        .eq('id', oldSubmissionId);
+
+      // Close the modal
+      document.querySelector('.modal-overlay')?.remove();
+
+      // Navigate to the assignment step to resubmit
+      const { data: assignment } = await this.supabase
+        .from('assignments')
+        .select('step_id, steps(module_id)')
+        .eq('id', assignmentId)
+        .single();
+
+      if (assignment && assignment.steps) {
+        // Navigate to the learning page with this step
+        await this.startLearning(assignment.steps.module_id);
+        
+        // Scroll to assignment section after a brief delay
+        setTimeout(() => {
+          const assignmentSection = document.querySelector('.assignment-section');
+          if (assignmentSection) {
+            assignmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+        
+        alert('📝 Ready to resubmit! Please submit your improved work below.');
+      }
+
+    } catch (error) {
+      console.error('Error preparing resubmission:', error);
+      alert('Failed to prepare resubmission. Please try again.');
+    }
   }
 
   // ==========================================
