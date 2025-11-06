@@ -10,6 +10,7 @@ class AIClassroom {
     this.currentPage = 'home';
     this.currentModule = null;
     this.currentStep = null;
+    this.viewAsStudent = localStorage.getItem('viewAsStudent') === 'true' || false;
   }
 
   // Initialize the application
@@ -101,11 +102,44 @@ class AIClassroom {
         adminNavLink.style.display = isAdmin ? 'block' : 'none';
       }
 
+      // Show "View As Student" toggle for admins
+      const viewAsToggle = document.getElementById('viewAsStudentToggle');
+      if (viewAsToggle && isAdmin) {
+        viewAsToggle.style.display = 'flex';
+        this.updateViewAsToggle();
+      }
+
       return isAdmin;
     } catch (error) {
       console.error('Error checking admin status:', error);
       return false;
     }
+  }
+
+  toggleViewAsStudent() {
+    this.viewAsStudent = !this.viewAsStudent;
+    localStorage.setItem('viewAsStudent', this.viewAsStudent.toString());
+    this.updateViewAsToggle();
+    
+    // Reload current page to apply the view
+    window.location.reload();
+  }
+
+  updateViewAsToggle() {
+    const toggle = document.getElementById('viewAsStudentToggle');
+    const checkbox = document.getElementById('viewAsStudentCheckbox');
+    const label = document.getElementById('viewAsStudentLabel');
+    
+    if (checkbox) {
+      checkbox.checked = this.viewAsStudent;
+    }
+    if (label) {
+      label.textContent = this.viewAsStudent ? 'Viewing as: Student' : 'Viewing as: Admin';
+    }
+  }
+
+  isViewingAsStudent() {
+    return this.viewAsStudent;
   }
 
   // Update user UI elements
@@ -2198,7 +2232,10 @@ class AIClassroom {
     const profile = await this.auth.getUserProfile();
     const isTrainer = profile && (profile.role === 'admin' || profile.role === 'trainer');
 
-    if (isTrainer) {
+    // Check "View As Student" mode
+    const viewingAsStudent = this.isViewingAsStudent();
+
+    if (isTrainer && !viewingAsStudent) {
       return this.renderTrainerAssignmentView(assignment, stepId);
     } else {
       return this.renderStudentAssignmentView(assignment, submission, grade, stepId);

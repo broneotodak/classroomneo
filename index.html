@@ -39,6 +39,16 @@
                     <a href="#admin" class="nav-link" id="adminNavLink" style="display: none;">
                         <span class="admin-badge">👨‍🏫 Admin</span>
                     </a>
+                    
+                    <!-- View As Student Toggle (for admins) -->
+                    <div id="viewAsStudentToggle" class="view-as-toggle" style="display: none;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="viewAsStudentCheckbox" onchange="app.toggleViewAsStudent()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="viewAsStudentLabel" class="toggle-label">Viewing as: Admin</span>
+                    </div>
+                    
                     <div class="user-menu">
                         <button class="user-menu-btn" id="userMenuBtn">
                             <img id="userAvatar" src="" alt="User" class="user-avatar">
