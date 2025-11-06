@@ -2,15 +2,7 @@
 # Documentation: https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  # Build command - generate env config from environment variables
-  command = '''
-    echo "// Auto-generated from Netlify environment variables" > env-config.js
-    echo "const NETLIFY_SUPABASE_URL = '$SUPABASE_URL';" >> env-config.js
-    echo "const NETLIFY_SUPABASE_ANON_KEY = '$SUPABASE_ANON_KEY';" >> env-config.js
-    echo "const NETLIFY_OPENAI_KEY = '$OPENAI_API_KEY';" >> env-config.js
-  '''
-  
-  # Directory to publish (root directory for this project)
+  # No build command needed - we'll use Netlify's environment variable injection
   publish = "."
 
 # Redirect rules

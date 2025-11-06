@@ -16,10 +16,12 @@ const CONFIG = {
   },
   
   // OpenAI configuration (for AI grading and module generation)
+  // Note: For security, add your OpenAI API key directly here for local dev,
+  // or use Netlify Functions (see serverless approach in docs)
   openai: {
-    // Use Netlify environment variable or fallback to empty
-    apiKey: typeof NETLIFY_OPENAI_KEY !== 'undefined' ? NETLIFY_OPENAI_KEY : '',
-    enabled: typeof NETLIFY_OPENAI_KEY !== 'undefined' && NETLIFY_OPENAI_KEY !== '',
+    apiKey: '', // Leave empty - will use serverless function for production
+    enabled: false, // Set to true when using local API key for development
+    useServerless: true, // Use Netlify Functions for secure API calls
   },
   
   // App configuration

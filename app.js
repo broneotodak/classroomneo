@@ -2005,7 +2005,7 @@ class AIClassroom {
             <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${submission.id})">
               View Submission
             </button>
-            ${submission.status === 'pending' && CONFIG.openai.enabled ? `
+            ${submission.status === 'pending' && (CONFIG.openai.enabled || CONFIG.openai.useServerless) ? `
               <button class="btn btn-primary btn-small" onclick="app.requestAIGrading(${submission.id})">
                 🤖 Request AI Grading Now
               </button>
@@ -2224,7 +2224,7 @@ class AIClassroom {
       
       // Trigger AI grading if enabled
       const assignment_data = await this.loadAssignmentForStep(stepId);
-      if (assignment_data && assignment_data.ai_grading_enabled && CONFIG.openai.enabled) {
+      if (assignment_data && assignment_data.ai_grading_enabled && (CONFIG.openai.enabled || CONFIG.openai.useServerless)) {
         await this.triggerAIGrading(submission.id);
       }
 
@@ -2258,8 +2258,9 @@ class AIClassroom {
   }
 
   async triggerAIGrading(submissionId) {
-    if (!CONFIG.openai.enabled) {
-      alert('AI grading is not enabled. Please configure OpenAI API key.');
+    // AI grading always available via serverless function
+    if (!CONFIG.openai.useServerless && !CONFIG.openai.enabled) {
+      alert('AI grading is not enabled.');
       return;
     }
 
@@ -2289,8 +2290,8 @@ class AIClassroom {
         throw new Error('Submission or assignment not found');
       }
 
-      // Initialize AI grader
-      const aiGrader = new AIGrader(CONFIG.openai.apiKey);
+      // Initialize AI grader (uses serverless function)
+      const aiGrader = new AIGrader();
 
       // Grade the submission
       const gradeData = await aiGrader.gradeSubmission({

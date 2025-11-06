@@ -3,12 +3,12 @@
 // ==========================================
 
 class AIGrader {
-  constructor(openaiApiKey) {
-    this.apiKey = openaiApiKey;
-    this.apiUrl = 'https://api.openai.com/v1/chat/completions';
+  constructor(useServerless = true) {
+    this.useServerless = useServerless;
+    this.serverlessUrl = '/.netlify/functions/ai-grade';
   }
 
-  // Grade a submission using OpenAI
+  // Grade a submission using serverless function
   async gradeSubmission(assignmentData) {
     const {
       assignment_title,
@@ -19,45 +19,29 @@ class AIGrader {
       student_notes
     } = assignmentData;
 
-    const prompt = this.buildGradingPrompt(
-      assignment_title,
-      instructions,
-      rubric,
-      submission_url,
-      file_url,
-      student_notes
-    );
-
     try {
-      const response = await fetch(this.apiUrl, {
+      // Call Netlify serverless function
+      const response = await fetch(this.serverlessUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o',  // or 'gpt-4' or 'gpt-3.5-turbo'
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert teaching assistant grading student assignments. Provide constructive, encouraging feedback with specific examples. Grade on a 1-5 scale where 5 is excellent.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.7,
-          response_format: { type: 'json_object' }
+          assignment_title,
+          instructions,
+          rubric,
+          submission_url,
+          file_url,
+          student_notes
         })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const error = await response.json();
+        throw new Error(error.message || `AI grading error: ${response.status}`);
       }
 
-      const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content);
+      const result = await response.json();
 
       return {
         score: result.score,
