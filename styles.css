@@ -3139,3 +3139,30 @@ body {
 [data-theme="dark"] .submission-preview {
     background: var(--card-bg);
 }
+
+/* Trainer Info in Class Cards */
+.class-trainer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.trainer-avatar-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.trainer-name {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+[data-theme="dark"] .class-trainer-info {
+    border-top-color: var(--border-color);
+}

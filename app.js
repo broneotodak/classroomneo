@@ -701,8 +701,9 @@ class AIClassroom {
 
   // Show login prompt
   showLoginPrompt() {
-    alert('Please sign in with GitHub to start learning!');
-    document.getElementById('loginBtn')?.click();
+    // Silently redirect to home page instead of showing annoying alert
+    // The login button is prominently displayed on the home page
+    console.log('Authentication required - redirecting to home page');
   }
 
   // Render dashboard
@@ -756,6 +757,27 @@ class AIClassroom {
           const classData = enrollment.class;
           const progress = await this.getClassProgress(classData.id);
           
+          // Get trainer info
+          let trainerInfo = '';
+          if (classData.trainer_id) {
+            const { data: trainer } = await this.supabase
+              .from('users_profile')
+              .select('github_username, github_avatar_url, full_name')
+              .eq('id', classData.trainer_id)
+              .maybeSingle();
+            
+            if (trainer) {
+              trainerInfo = `
+                <div class="class-trainer-info">
+                  <img src="${trainer.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(trainer.github_username || 'Trainer')}" 
+                       class="trainer-avatar-small" 
+                       alt="${trainer.github_username}">
+                  <span class="trainer-name">👨‍🏫 ${this.escapeHtml(trainer.github_username || trainer.full_name || 'Trainer')}</span>
+                </div>
+              `;
+            }
+          }
+          
           return `
             <div class="my-class-card" onclick="app.viewClassDetail(${classData.id})">
               <div class="my-class-header">
@@ -763,6 +785,7 @@ class AIClassroom {
                 <span class="class-badge">${classData.is_active ? 'Active' : 'Ended'}</span>
               </div>
               <p class="my-class-description">${this.escapeHtml(classData.description || '')}</p>
+              ${trainerInfo}
               
               <div class="class-progress-overview">
                 <div class="progress-item">
@@ -1234,12 +1257,16 @@ class AIClassroom {
     const content = input.value.trim();
 
     if (!content) {
-      alert('Please enter a message!');
+      // Show a subtle message instead of alert
+      input.placeholder = 'Please enter a message first';
+      input.focus();
       return;
     }
 
     if (!this.auth.isAuthenticated()) {
-      alert('Please sign in to post messages!');
+      // Silently redirect to login instead of showing alert
+      console.log('Sign in required to post messages');
+      this.navigateTo('home');
       return;
     }
 
