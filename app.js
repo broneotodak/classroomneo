@@ -1510,11 +1510,18 @@ class AIClassroom {
           <div class="submission-info">
             <p>✅ You submitted this assignment on ${this.formatDate(submission.submitted_at)}</p>
             ${submission.status === 'grading' ? '<p>🤖 AI is grading your work...</p>' : ''}
-            ${submission.status === 'pending' ? '<p>⏳ Waiting for review...</p>' : ''}
+            ${submission.status === 'pending' ? '<p>⏳ Waiting for AI review...</p>' : ''}
           </div>
-          <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${submission.id})">
-            View Submission
-          </button>
+          <div class="submission-actions">
+            <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${submission.id})">
+              View Submission
+            </button>
+            ${submission.status === 'pending' && CONFIG.openai.enabled ? `
+              <button class="btn btn-primary btn-small" onclick="app.requestAIGrading(${submission.id})">
+                🤖 Request AI Grading Now
+              </button>
+            ` : ''}
+          </div>
         </div>
       `;
     } else {
@@ -1763,11 +1770,13 @@ class AIClassroom {
 
   async triggerAIGrading(submissionId) {
     if (!CONFIG.openai.enabled) {
-      console.log('AI grading not enabled');
+      alert('AI grading is not enabled. Please configure OpenAI API key.');
       return;
     }
 
     try {
+      this.showLoading(true);
+
       // Update status to grading
       await this.supabase
         .from('submissions')
@@ -1777,23 +1786,28 @@ class AIClassroom {
       // Get submission and assignment data
       const { data: submission } = await this.supabase
         .from('submissions')
-        .select(`
-          *,
-          assignment:assignments(*)
-        `)
+        .select('*')
         .eq('id', submissionId)
         .single();
 
-      if (!submission) return;
+      const { data: assignment } = await this.supabase
+        .from('assignments')
+        .select('*')
+        .eq('id', submission.assignment_id)
+        .single();
+
+      if (!submission || !assignment) {
+        throw new Error('Submission or assignment not found');
+      }
 
       // Initialize AI grader
       const aiGrader = new AIGrader(CONFIG.openai.apiKey);
 
       // Grade the submission
       const gradeData = await aiGrader.gradeSubmission({
-        assignment_title: submission.assignment.title,
-        instructions: submission.assignment.instructions,
-        rubric: submission.assignment.ai_grading_rubric,
+        assignment_title: assignment.title,
+        instructions: assignment.instructions,
+        rubric: assignment.ai_grading_rubric,
         submission_url: submission.submission_url,
         file_url: submission.file_url,
         student_notes: submission.notes
@@ -1822,16 +1836,31 @@ class AIClassroom {
         })
         .eq('id', submissionId);
 
-      alert('🤖 AI has graded your submission! Check the feedback above.');
+      this.showLoading(false);
+      alert('🤖 AI has graded your submission! Refresh to see the feedback.');
+      
+      // Reload the step content to show grade
+      if (this.currentModule && this.currentStep) {
+        await this.renderStepContent(this.currentModule, this.currentStep);
+      }
       
     } catch (error) {
       console.error('Error in AI grading:', error);
+      this.showLoading(false);
+      alert(`Failed to grade submission: ${error.message}`);
+      
       // Update status back to pending if grading failed
       await this.supabase
         .from('submissions')
         .update({ status: 'pending' })
         .eq('id', submissionId);
     }
+  }
+
+  // Wrapper for manual trigger (for students and trainers)
+  async requestAIGrading(submissionId) {
+    if (!confirm('Request AI to grade this submission now?')) return;
+    await this.triggerAIGrading(submissionId);
   }
 
   async viewAllSubmissions(assignmentId) {
