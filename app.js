@@ -3315,13 +3315,7 @@ class AIClassroom {
 
       this.showLoading(true);
 
-      // Archive old submission
-      await this.supabase
-        .from('submissions')
-        .update({ status: 'superseded' })
-        .eq('id', oldSubmissionId);
-
-      // Delete old grade (so new submission starts fresh)
+      // Delete old grade (student gets fresh grading)
       await this.supabase
         .from('grades')
         .delete()
@@ -3339,20 +3333,22 @@ class AIClassroom {
         fileType = file.type;
       }
 
-      // Create new submission
+      // UPDATE existing submission instead of creating new one
+      // This avoids the unique constraint violation
       const { data: newSubmission, error: submitError } = await this.supabase
         .from('submissions')
-        .insert({
-          assignment_id: assignmentId,
-          student_id: this.auth.getCurrentUser().id,
+        .update({
           submission_type: file && url ? 'both' : (file ? 'file' : 'url'),
-          file_url: fileUrl,
-          file_name: fileName,
-          file_type: fileType,
+          file_url: fileUrl || null,
+          file_name: fileName || null,
+          file_type: fileType || null,
           submission_url: url || null,
           notes: notes || null,
-          status: 'pending'
+          status: 'pending',
+          submitted_at: new Date().toISOString(), // Update submission time
+          graded_at: null // Clear graded time
         })
+        .eq('id', oldSubmissionId)
         .select()
         .single();
 
