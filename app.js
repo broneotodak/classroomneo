@@ -45,7 +45,10 @@ class AIClassroom {
       // Set up event listeners
       this.setupEventListeners();
 
-      // Handle initial route
+      // Handle initial route - redirect to dashboard if authenticated
+      if (this.auth.isAuthenticated() && (window.location.hash === '' || window.location.hash === '#' || window.location.hash === '#home')) {
+        window.location.hash = '#dashboard';
+      }
       this.handleRoute();
 
       this.showLoading(false);
