@@ -3177,61 +3177,190 @@ class AIClassroom {
     `;
   }
 
-  // Resubmit assignment
+  // Resubmit assignment - Show modal instead of navigation
   async resubmitAssignment(assignmentId, oldSubmissionId) {
     try {
-      const confirmed = confirm('Are you sure you want to resubmit this assignment? Your previous submission will be archived and you\'ll need to submit new work.');
-      
-      if (!confirmed) return;
+      // Close any existing modals
+      document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
 
-      // Archive the old submission (mark as superseded)
+      // Get assignment details
+      const { data: assignment } = await this.supabase
+        .from('assignments')
+        .select('title, description, instructions, allow_file_upload, allow_url_submission, allowed_file_types, max_file_size_mb')
+        .eq('id', assignmentId)
+        .single();
+
+      if (!assignment) {
+        alert('Assignment not found');
+        return;
+      }
+
+      // Show resubmission modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+          <div class="modal-header">
+            <h2>🔄 Resubmit Assignment</h2>
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+          </div>
+          
+          <div class="modal-body">
+            <div style="background: var(--warning-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--warning-color);">
+              <strong>💪 Improve Your Grade!</strong>
+              <p style="margin: 0.5rem 0 0;">Your previous submission will be archived. Submit improved work to get a better grade.</p>
+            </div>
+
+            <h3 style="margin-bottom: 1rem;">${this.escapeHtml(assignment.title)}</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+              ${this.escapeHtml(assignment.instructions || assignment.description || '')}
+            </p>
+
+            <div class="form-group">
+              ${assignment.allow_url_submission ? `
+                <label for="resubmitUrl">🔗 URL (optional)</label>
+                <input type="url" id="resubmitUrl" placeholder="https://your-project.com" class="form-input">
+              ` : ''}
+            </div>
+
+            <div class="form-group">
+              ${assignment.allow_file_upload ? `
+                <label for="resubmitFile">📎 Upload File (optional)</label>
+                <input type="file" id="resubmitFile" class="form-input" 
+                       accept="${(assignment.allowed_file_types || []).join(',')}"
+                       onchange="app.handleResubmitFileSelect(event)">
+                <div id="resubmitFilePreview" style="display: none; margin-top: 0.5rem;"></div>
+              ` : ''}
+            </div>
+
+            <div class="form-group">
+              <label for="resubmitNotes">📝 Notes (optional)</label>
+              <textarea id="resubmitNotes" rows="3" placeholder="Explain what you improved..." class="form-input"></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            <button class="btn btn-primary" onclick="app.submitResubmission(${assignmentId}, ${oldSubmissionId})">
+              Submit Improved Work
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+    } catch (error) {
+      console.error('Error showing resubmit modal:', error);
+      alert('Failed to load resubmission form.');
+    }
+  }
+
+  resubmitSelectedFile = null;
+
+  handleResubmitFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.resubmitSelectedFile = file;
+
+    const preview = document.getElementById('resubmitFilePreview');
+    preview.style.display = 'block';
+    preview.innerHTML = `
+      <div style="padding: 0.75rem; background: var(--light-bg); border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>📄 ${file.name}</span>
+        <span style="color: var(--text-secondary); font-size: 0.875rem;">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+        <button class="btn-remove" onclick="app.clearResubmitFile()" style="margin-left: auto;">Remove</button>
+      </div>
+    `;
+  }
+
+  clearResubmitFile() {
+    this.resubmitSelectedFile = null;
+    document.getElementById('resubmitFile').value = '';
+    document.getElementById('resubmitFilePreview').style.display = 'none';
+  }
+
+  async submitResubmission(assignmentId, oldSubmissionId) {
+    try {
+      const url = document.getElementById('resubmitUrl')?.value.trim();
+      const notes = document.getElementById('resubmitNotes')?.value.trim();
+      const file = this.resubmitSelectedFile;
+
+      if (!url && !file) {
+        alert('Please provide either a URL or upload a file');
+        return;
+      }
+
+      this.showLoading(true);
+
+      // Archive old submission
       await this.supabase
         .from('submissions')
         .update({ status: 'superseded' })
         .eq('id', oldSubmissionId);
 
-      // Close the modal
-      document.querySelector('.modal-overlay')?.remove();
+      // Delete old grade (so new submission starts fresh)
+      await this.supabase
+        .from('grades')
+        .delete()
+        .eq('submission_id', oldSubmissionId);
 
-      // Navigate to the assignment step to resubmit
-      const { data: assignment } = await this.supabase
+      // Upload file if provided
+      let fileUrl = null;
+      let fileName = null;
+      let fileType = null;
+
+      if (file) {
+        const uploadResult = await this.uploadFile(file);
+        fileUrl = uploadResult.publicUrl;
+        fileName = file.name;
+        fileType = file.type;
+      }
+
+      // Create new submission
+      const { data: newSubmission, error: submitError } = await this.supabase
+        .from('submissions')
+        .insert({
+          assignment_id: assignmentId,
+          student_id: this.auth.getCurrentUser().id,
+          submission_type: file && url ? 'both' : (file ? 'file' : 'url'),
+          file_url: fileUrl,
+          file_name: fileName,
+          file_type: fileType,
+          submission_url: url || null,
+          notes: notes || null,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (submitError) throw submitError;
+
+      // Close modal
+      document.querySelector('.modal-overlay').remove();
+
+      this.showLoading(false);
+      alert('✅ Resubmission successful! AI will grade it shortly.');
+
+      // Trigger AI grading if enabled
+      const { data: assignment_data } = await this.supabase
         .from('assignments')
-        .select('step_id, steps(module_id)')
+        .select('ai_grading_enabled')
         .eq('id', assignmentId)
         .single();
 
-      if (assignment && assignment.steps) {
-        // Get module info
-        const { data: module } = await this.supabase
-          .from('modules')
-          .select('slug')
-          .eq('id', assignment.steps.module_id)
-          .single();
-        
-        const { data: step } = await this.supabase
-          .from('steps')
-          .select('slug')
-          .eq('id', assignment.step_id)
-          .single();
-        
-        if (module && step) {
-          // Navigate to the specific step with the assignment
-          window.location.hash = `#learning/${module.slug}/${step.slug}`;
-          
-          // Scroll to assignment section after page loads
-          setTimeout(() => {
-            const assignmentSection = document.querySelector('.assignment-section');
-            if (assignmentSection) {
-              assignmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            alert('📝 Ready to resubmit! Please submit your improved work below.');
-          }, 1000);
-        }
+      if (assignment_data?.ai_grading_enabled && (CONFIG.openai.enabled || CONFIG.openai.useServerless)) {
+        await this.triggerAIGrading(newSubmission.id);
       }
 
+      // Reload current view
+      window.location.reload();
+
     } catch (error) {
-      console.error('Error preparing resubmission:', error);
-      alert('Failed to prepare resubmission. Please try again.');
+      this.showLoading(false);
+      console.error('Error resubmitting:', error);
+      alert('Failed to resubmit. Please try again.');
     }
   }
 
