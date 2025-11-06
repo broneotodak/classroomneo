@@ -195,64 +195,74 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES
 -- ==========================================
 
+-- Drop all existing policies first
+DO $$ 
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP POLICY IF EXISTS ' || quote_ident(r.policyname) || ' ON ' || quote_ident(r.tablename);
+    END LOOP;
+END $$;
+
 -- Users Profile
-CREATE POLICY IF NOT EXISTS "Users view own profile" ON users_profile FOR SELECT USING (auth.uid() = id);
-CREATE POLICY IF NOT EXISTS "Trainers view all profiles" ON users_profile FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Users update own profile" ON users_profile FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY IF NOT EXISTS "Users insert own profile" ON users_profile FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users view own profile" ON users_profile FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Trainers view all profiles" ON users_profile FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users update own profile" ON users_profile FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users insert own profile" ON users_profile FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Classes
-CREATE POLICY IF NOT EXISTS "Anyone view active classes" ON classes FOR SELECT USING (is_active = true);
-CREATE POLICY IF NOT EXISTS "Trainers create classes" ON classes FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Trainers update classes" ON classes FOR UPDATE USING (trainer_id = auth.uid() OR EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY IF NOT EXISTS "Trainers delete classes" ON classes FOR DELETE USING (trainer_id = auth.uid() OR EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Anyone view active classes" ON classes FOR SELECT USING (is_active = true);
+CREATE POLICY "Trainers create classes" ON classes FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Trainers update classes" ON classes FOR UPDATE USING (trainer_id = auth.uid() OR EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Trainers delete classes" ON classes FOR DELETE USING (trainer_id = auth.uid() OR EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role = 'admin'));
 
 -- Class Enrollments
-CREATE POLICY IF NOT EXISTS "Users view own enrollments" ON class_enrollments FOR SELECT USING (student_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Trainers view all enrollments" ON class_enrollments FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Users enroll themselves" ON class_enrollments FOR INSERT WITH CHECK (student_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Trainers enroll students" ON class_enrollments FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Trainers remove enrollments" ON class_enrollments FOR DELETE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users view own enrollments" ON class_enrollments FOR SELECT USING (student_id = auth.uid());
+CREATE POLICY "Trainers view all enrollments" ON class_enrollments FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users enroll themselves" ON class_enrollments FOR INSERT WITH CHECK (student_id = auth.uid());
+CREATE POLICY "Trainers enroll students" ON class_enrollments FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Trainers remove enrollments" ON class_enrollments FOR DELETE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- Modules
-CREATE POLICY IF NOT EXISTS "Enrolled users view modules" ON modules FOR SELECT USING (EXISTS (SELECT 1 FROM class_enrollments WHERE class_id = modules.class_id AND student_id = auth.uid() AND status = 'active'));
-CREATE POLICY IF NOT EXISTS "Trainers view all modules" ON modules FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Enrolled users view modules" ON modules FOR SELECT USING (EXISTS (SELECT 1 FROM class_enrollments WHERE class_id = modules.class_id AND student_id = auth.uid() AND status = 'active'));
+CREATE POLICY "Trainers view all modules" ON modules FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- Steps
-CREATE POLICY IF NOT EXISTS "Enrolled users view steps" ON steps FOR SELECT USING (EXISTS (SELECT 1 FROM modules m JOIN class_enrollments ce ON ce.class_id = m.class_id WHERE m.id = steps.module_id AND ce.student_id = auth.uid() AND ce.status = 'active'));
-CREATE POLICY IF NOT EXISTS "Trainers view all steps" ON steps FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Enrolled users view steps" ON steps FOR SELECT USING (EXISTS (SELECT 1 FROM modules m JOIN class_enrollments ce ON ce.class_id = m.class_id WHERE m.id = steps.module_id AND ce.student_id = auth.uid() AND ce.status = 'active'));
+CREATE POLICY "Trainers view all steps" ON steps FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- User Progress
-CREATE POLICY IF NOT EXISTS "Users view own progress" ON user_progress FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Users insert own progress" ON user_progress FOR INSERT WITH CHECK (user_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Users update own progress" ON user_progress FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Users view own progress" ON user_progress FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users insert own progress" ON user_progress FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users update own progress" ON user_progress FOR UPDATE USING (user_id = auth.uid());
 
 -- Assignments
-CREATE POLICY IF NOT EXISTS "Authenticated view assignments" ON assignments FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY IF NOT EXISTS "Trainers manage assignments" ON assignments FOR ALL USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Authenticated view assignments" ON assignments FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Trainers manage assignments" ON assignments FOR ALL USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- Submissions
-CREATE POLICY IF NOT EXISTS "Users view own submissions" ON submissions FOR SELECT USING (student_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Trainers view all submissions" ON submissions FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Users create submissions" ON submissions FOR INSERT WITH CHECK (student_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Users update pending submissions" ON submissions FOR UPDATE USING (student_id = auth.uid() AND status = 'pending');
-CREATE POLICY IF NOT EXISTS "Trainers update submissions" ON submissions FOR UPDATE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users view own submissions" ON submissions FOR SELECT USING (student_id = auth.uid());
+CREATE POLICY "Trainers view all submissions" ON submissions FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users create submissions" ON submissions FOR INSERT WITH CHECK (student_id = auth.uid());
+CREATE POLICY "Users update pending submissions" ON submissions FOR UPDATE USING (student_id = auth.uid() AND status = 'pending');
+CREATE POLICY "Trainers update submissions" ON submissions FOR UPDATE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- Grades
-CREATE POLICY IF NOT EXISTS "Users view own grades" ON grades FOR SELECT USING (EXISTS (SELECT 1 FROM submissions WHERE id = grades.submission_id AND student_id = auth.uid()));
-CREATE POLICY IF NOT EXISTS "Trainers view all grades" ON grades FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Trainers create grades" ON grades FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "Trainers update grades" ON grades FOR UPDATE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Users view own grades" ON grades FOR SELECT USING (EXISTS (SELECT 1 FROM submissions WHERE id = grades.submission_id AND student_id = auth.uid()));
+CREATE POLICY "Trainers view all grades" ON grades FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Trainers create grades" ON grades FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "Trainers update grades" ON grades FOR UPDATE USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
 
 -- Certificates
-CREATE POLICY IF NOT EXISTS "Users view own certificates" ON certificates FOR SELECT USING (student_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Trainers view all certificates" ON certificates FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
-CREATE POLICY IF NOT EXISTS "System create certificates" ON certificates FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users view own certificates" ON certificates FOR SELECT USING (student_id = auth.uid());
+CREATE POLICY "Trainers view all certificates" ON certificates FOR SELECT USING (EXISTS (SELECT 1 FROM users_profile WHERE id = auth.uid() AND role IN ('trainer', 'admin')));
+CREATE POLICY "System create certificates" ON certificates FOR INSERT WITH CHECK (true);
 
 -- Messages
-CREATE POLICY IF NOT EXISTS "Anyone view messages" ON messages FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Authenticated post messages" ON messages FOR INSERT WITH CHECK (user_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "Users delete own messages" ON messages FOR DELETE USING (user_id = auth.uid());
+CREATE POLICY "Anyone view messages" ON messages FOR SELECT USING (true);
+CREATE POLICY "Authenticated post messages" ON messages FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users delete own messages" ON messages FOR DELETE USING (user_id = auth.uid());
 
 -- ==========================================
 -- INDEXES
