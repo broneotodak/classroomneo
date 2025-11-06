@@ -3152,18 +3152,32 @@ class AIClassroom {
         .single();
 
       if (assignment && assignment.steps) {
-        // Navigate to the learning page with this step
-        await this.startLearning(assignment.steps.module_id);
+        // Get module info
+        const { data: module } = await this.supabase
+          .from('modules')
+          .select('slug')
+          .eq('id', assignment.steps.module_id)
+          .single();
         
-        // Scroll to assignment section after a brief delay
-        setTimeout(() => {
-          const assignmentSection = document.querySelector('.assignment-section');
-          if (assignmentSection) {
-            assignmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 500);
+        const { data: step } = await this.supabase
+          .from('steps')
+          .select('slug')
+          .eq('id', assignment.step_id)
+          .single();
         
-        alert('📝 Ready to resubmit! Please submit your improved work below.');
+        if (module && step) {
+          // Navigate to the specific step with the assignment
+          window.location.hash = `#learning/${module.slug}/${step.slug}`;
+          
+          // Scroll to assignment section after page loads
+          setTimeout(() => {
+            const assignmentSection = document.querySelector('.assignment-section');
+            if (assignmentSection) {
+              assignmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            alert('📝 Ready to resubmit! Please submit your improved work below.');
+          }, 1000);
+        }
       }
 
     } catch (error) {
