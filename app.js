@@ -3730,12 +3730,12 @@ class AIClassroom {
     const downloadBtn = document.getElementById('download-cert-btn');
     if (downloadBtn) {
       downloadBtn.addEventListener('click', () => {
-        this.downloadCertificate(certificate.certificate_code);
+        this.downloadCertificateImage(certificate.certificate_code);
       });
     }
   }
 
-  async downloadCertificate(certCode) {
+  async downloadCertificateImage(certCode) {
     console.log('Download certificate called for:', certCode);
 
     const certElement = document.getElementById('certificate-content');
