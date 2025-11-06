@@ -3013,6 +3013,161 @@ class AIClassroom {
     await this.showSubmission(submissionId);
   }
 
+  async overrideGrade(submissionId, gradeId) {
+    try {
+      // Get current grade to pre-fill
+      const { data: currentGrade } = await this.supabase
+        .from('grades')
+        .select('*')
+        .eq('id', gradeId)
+        .single();
+
+      if (!currentGrade) {
+        alert('Grade not found');
+        return;
+      }
+
+      // Close submission modal
+      document.querySelector('.modal-overlay')?.remove();
+
+      // Show override modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content grade-modal">
+          <div class="modal-header">
+            <h2>✏️ Override ${currentGrade.grader_type === 'ai' ? 'AI' : ''} Grade</h2>
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+          </div>
+          
+          <div class="modal-body">
+            <div style="background: var(--warning-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--warning-color);">
+              <strong>👨‍🏫 Trainer Override</strong>
+              <p style="margin: 0.5rem 0 0;">You're about to override the ${currentGrade.grader_type === 'ai' ? 'AI' : 'existing'} grade. Your grade will be marked as manual and will replace the current grade.</p>
+            </div>
+
+            <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+              <strong>Current ${currentGrade.grader_type === 'ai' ? 'AI' : ''} Grade: ${currentGrade.score}/5</strong>
+              <p style="margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--text-secondary);">${this.escapeHtml(currentGrade.feedback)}</p>
+            </div>
+
+            <div class="grade-form">
+              <div class="form-group">
+                <label>New Score (1-5 stars)</label>
+                <div class="star-selector">
+                  ${[1, 2, 3, 4, 5].map(star => `
+                    <button type="button" class="star-btn" data-score="${star}" onclick="app.selectGradeScore(${star})">
+                      <span class="star-icon">⭐</span>
+                      <span class="star-label">${star}</span>
+                    </button>
+                  `).join('')}
+                </div>
+                <input type="hidden" id="gradeScore" value="${currentGrade.score}">
+              </div>
+
+              <div class="form-group">
+                <label for="gradeFeedback">Overall Feedback *</label>
+                <textarea id="gradeFeedback" rows="4" placeholder="Provide your assessment..." required>${this.escapeHtml(currentGrade.feedback)}</textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="gradeStrengths">What They Did Well</label>
+                <textarea id="gradeStrengths" rows="3" placeholder="Highlight their strengths...">${this.escapeHtml(currentGrade.ai_strengths || '')}</textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="gradeImprovements">How to Improve</label>
+                <textarea id="gradeImprovements" rows="3" placeholder="Suggestions for improvement...">${this.escapeHtml(currentGrade.ai_improvements || '')}</textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="gradeAnalysis">Detailed Analysis (Optional)</label>
+                <textarea id="gradeAnalysis" rows="3" placeholder="Technical analysis...">${this.escapeHtml(currentGrade.ai_analysis || '')}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            <button class="btn btn-primary" onclick="app.submitGradeOverride(${submissionId}, ${gradeId})">Update Grade</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Pre-select current score
+      this.selectGradeScore(currentGrade.score);
+
+    } catch (error) {
+      console.error('Error showing override form:', error);
+      alert('Failed to load override form');
+    }
+  }
+
+  async submitGradeOverride(submissionId, gradeId) {
+    try {
+      const score = parseInt(document.getElementById('gradeScore').value);
+      const feedback = document.getElementById('gradeFeedback').value.trim();
+      const strengths = document.getElementById('gradeStrengths').value.trim();
+      const improvements = document.getElementById('gradeImprovements').value.trim();
+      const analysis = document.getElementById('gradeAnalysis')?.value.trim();
+
+      if (!feedback) {
+        alert('Please provide feedback');
+        return;
+      }
+
+      if (score < 1 || score > 5) {
+        alert('Score must be between 1 and 5');
+        return;
+      }
+
+      this.showLoading(true);
+
+      // Update existing grade (override)
+      const { error: gradeError } = await this.supabase
+        .from('grades')
+        .update({
+          grader_type: 'manual', // Mark as manual override
+          score: score,
+          feedback: feedback,
+          ai_strengths: strengths || null,
+          ai_improvements: improvements || null,
+          ai_analysis: analysis || null,
+          graded_by: this.user.id,
+          created_at: new Date().toISOString() // Update timestamp
+        })
+        .eq('id', gradeId);
+
+      if (gradeError) throw gradeError;
+
+      // Ensure submission status is graded
+      await this.supabase
+        .from('submissions')
+        .update({ 
+          status: 'graded',
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+
+      this.showLoading(false);
+
+      // Close modal
+      document.querySelector('.modal-overlay').remove();
+
+      alert('✅ Grade overridden successfully!');
+
+      // Reload current view
+      window.location.reload();
+
+    } catch (error) {
+      this.showLoading(false);
+      console.error('Error overriding grade:', error);
+      alert('Failed to override grade: ' + error.message);
+    }
+  }
+
   async showSubmission(submissionId) {
     try {
       // Load submission with grade
@@ -3050,7 +3205,11 @@ class AIClassroom {
         full_name: ''
       };
 
-      this.renderSubmissionDetails(submission, grade, assignment);
+      // Check if current user is trainer/admin
+      const currentProfile = await this.auth.getUserProfile();
+      const isTrainer = currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'trainer');
+
+      this.renderSubmissionDetails(submission, grade, assignment, isTrainer);
       this.showModal('viewSubmissionModal');
 
     } catch (error) {
@@ -3059,7 +3218,7 @@ class AIClassroom {
     }
   }
 
-  renderSubmissionDetails(submission, grade, assignment) {
+  renderSubmissionDetails(submission, grade, assignment, isTrainer = false) {
     const container = document.getElementById('submissionDetails');
     const student = submission.student || {};
 
@@ -3157,7 +3316,17 @@ class AIClassroom {
               Graded by ${grade.grader_type === 'ai' ? '🤖 AI Assistant' : '👨‍🏫 Instructor'}
             </div>
 
-            ${grade.score < 5 ? `
+            ${isTrainer ? `
+              <div style="margin-top: 1.5rem; padding: 1rem; background: var(--primary-light); border-radius: 0.5rem; border-left: 4px solid var(--primary-color);">
+                <strong>👨‍🏫 Trainer Controls</strong>
+                <p style="margin: 0.5rem 0;">You can override the ${grade.grader_type === 'ai' ? 'AI' : 'existing'} grade with your own assessment.</p>
+                <button class="btn btn-primary btn-small" onclick="app.overrideGrade(${submission.id}, ${grade.id})" style="margin-top: 0.5rem;">
+                  ✏️ Override Grade
+                </button>
+              </div>
+            ` : ''}
+
+            ${grade.score < 5 && !isTrainer ? `
               <div style="margin-top: 1.5rem; padding: 1rem; background: var(--warning-bg); border-radius: 0.5rem; border-left: 4px solid var(--warning-color);">
                 <strong>💪 Want to improve?</strong>
                 <p style="margin: 0.5rem 0;">You can resubmit this assignment to try for a better grade!</p>
