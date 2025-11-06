@@ -17,6 +17,12 @@ DROP POLICY IF EXISTS "Trainers can manage assignments" ON assignments;
 DROP POLICY IF EXISTS "Trainers and admins can create assignments" ON assignments;
 DROP POLICY IF EXISTS "Trainers and admins can update assignments" ON assignments;
 
+-- Drop these too just in case
+DROP POLICY IF EXISTS "Anyone authenticated can view assignments" ON assignments;
+DROP POLICY IF EXISTS "Trainers can insert assignments" ON assignments;
+DROP POLICY IF EXISTS "Trainers can update assignments" ON assignments;
+DROP POLICY IF EXISTS "Trainers can delete assignments" ON assignments;
+
 -- Create simple policies
 CREATE POLICY "Anyone authenticated can view assignments" ON assignments
   FOR SELECT USING (auth.role() = 'authenticated');
@@ -46,6 +52,11 @@ DROP POLICY IF EXISTS "Trainers can view submissions in their classes" ON submis
 DROP POLICY IF EXISTS "Students can submit assignments" ON submissions;
 DROP POLICY IF EXISTS "Students can update own pending submissions" ON submissions;
 DROP POLICY IF EXISTS "Trainers can update submission status" ON submissions;
+DROP POLICY IF EXISTS "Users can view their own submissions" ON submissions;
+DROP POLICY IF EXISTS "Trainers can view all submissions" ON submissions;
+DROP POLICY IF EXISTS "Users can create submissions" ON submissions;
+DROP POLICY IF EXISTS "Users can update their pending submissions" ON submissions;
+DROP POLICY IF EXISTS "Trainers can update any submission" ON submissions;
 
 -- Create simple policies
 CREATE POLICY "Users can view their own submissions" ON submissions
@@ -75,6 +86,9 @@ CREATE POLICY "Trainers can update any submission" ON submissions
 DROP POLICY IF EXISTS "Students can view their own grades" ON grades;
 DROP POLICY IF EXISTS "Trainers can view grades in their classes" ON grades;
 DROP POLICY IF EXISTS "Trainers and system can create grades" ON grades;
+DROP POLICY IF EXISTS "Users can view grades for their submissions" ON grades;
+DROP POLICY IF EXISTS "Trainers can view all grades" ON grades;
+DROP POLICY IF EXISTS "Trainers can update grades" ON grades;
 
 -- Create simple policies
 CREATE POLICY "Users can view grades for their submissions" ON grades
