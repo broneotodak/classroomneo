@@ -238,6 +238,27 @@ class AIClassroom {
     // Manage students modal
     document.getElementById('closeManageStudentsModal')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
     document.getElementById('closeManageStudents')?.addEventListener('click', () => this.hideModal('manageStudentsModal'));
+
+    // AI Module Builder modal
+    document.getElementById('aiModuleBuilderBtn')?.addEventListener('click', () => this.showAiModuleBuilder());
+    document.getElementById('closeAiModuleBuilder')?.addEventListener('click', () => this.hideModal('aiModuleBuilderModal'));
+    document.getElementById('cancelAiBuilder')?.addEventListener('click', () => this.hideModal('aiModuleBuilderModal'));
+    document.getElementById('generateWithAi')?.addEventListener('click', () => this.handleGenerateModules());
+    document.getElementById('saveAiModules')?.addEventListener('click', () => this.handleSaveAiModules());
+    document.getElementById('aiPrompt')?.addEventListener('input', (e) => {
+      const generateBtn = document.getElementById('generateWithAi');
+      const classSelect = document.getElementById('aiClassSelect');
+      if (generateBtn) {
+        generateBtn.disabled = !e.target.value.trim() || !classSelect.value;
+      }
+    });
+    document.getElementById('aiClassSelect')?.addEventListener('change', (e) => {
+      const generateBtn = document.getElementById('generateWithAi');
+      const promptInput = document.getElementById('aiPrompt');
+      if (generateBtn) {
+        generateBtn.disabled = !e.target.value || !promptInput.value.trim();
+      }
+    });
     document.getElementById('saveEnrollments')?.addEventListener('click', () => this.handleSaveEnrollments());
     document.getElementById('searchAvailableStudents')?.addEventListener('input', (e) => this.filterAvailableStudents(e.target.value));
     
@@ -1819,6 +1840,214 @@ class AIClassroom {
     } catch (error) {
       console.error('Error creating class:', error);
       alert('Failed to create class. Please try again.');
+    }
+  }
+
+  // Show AI Module Builder modal
+  async showAiModuleBuilder() {
+    try {
+      this.showModal('aiModuleBuilderModal');
+
+      // Reset form
+      document.getElementById('aiPrompt').value = '';
+      document.getElementById('aiGeneratedPreview').style.display = 'none';
+      document.getElementById('generateWithAi').disabled = true;
+      document.getElementById('saveAiModules').style.display = 'none';
+
+      // Load trainer's classes
+      const user = this.auth.getCurrentUser();
+      const { data: classes, error } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const classSelect = document.getElementById('aiClassSelect');
+      if (classSelect) {
+        classSelect.innerHTML = '<option value="">Choose a class...</option>';
+        (classes || []).forEach(cls => {
+          const option = document.createElement('option');
+          option.value = cls.id;
+          option.textContent = cls.name;
+          classSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading AI Module Builder:', error);
+      alert('Failed to load AI Module Builder. Please try again.');
+    }
+  }
+
+  // Handle generate modules with AI
+  async handleGenerateModules() {
+    const promptInput = document.getElementById('aiPrompt');
+    const classSelect = document.getElementById('aiClassSelect');
+    const generateBtn = document.getElementById('generateWithAi');
+    const generateBtnText = document.getElementById('generateBtnText');
+    const generateBtnLoading = document.getElementById('generateBtnLoading');
+    const previewDiv = document.getElementById('aiGeneratedPreview');
+    const previewContent = document.getElementById('aiPreviewContent');
+
+    const prompt = promptInput.value.trim();
+    const classId = classSelect.value;
+
+    if (!prompt || !classId) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      // Show loading state
+      generateBtn.disabled = true;
+      generateBtnText.style.display = 'none';
+      generateBtnLoading.style.display = 'inline';
+
+      // Get class name
+      const selectedClass = classSelect.options[classSelect.selectedIndex].text;
+
+      // Call Netlify function
+      const response = await fetch('/.netlify/functions/ai-module-builder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          classId: classId,
+          className: selectedClass
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate curriculum');
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.curriculum) {
+        throw new Error('Invalid response from AI');
+      }
+
+      // Store generated curriculum
+      this.generatedCurriculum = {
+        classId: classId,
+        modules: result.curriculum.modules
+      };
+
+      // Display preview
+      previewContent.innerHTML = `
+        <div class="ai-preview-summary">
+          <p>✅ Generated ${result.meta.total_modules} modules with ${result.meta.total_steps} steps</p>
+        </div>
+        <div class="ai-preview-modules">
+          ${result.curriculum.modules.map((module, idx) => `
+            <div class="preview-module">
+              <h4>📚 Module ${idx + 1}: ${module.title}</h4>
+              <p>${module.description}</p>
+              <div class="preview-steps">
+                ${module.steps.map((step, stepIdx) => `
+                  <div class="preview-step">
+                    <strong>Step ${stepIdx + 1}:</strong> ${step.title}
+                    <span class="step-duration">(~${step.estimated_minutes} min)</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      previewDiv.style.display = 'block';
+      document.getElementById('saveAiModules').style.display = 'inline-block';
+
+      // Reset generate button
+      generateBtn.disabled = false;
+      generateBtnText.style.display = 'inline';
+      generateBtnLoading.style.display = 'none';
+
+    } catch (error) {
+      console.error('Error generating modules:', error);
+      alert('Failed to generate curriculum: ' + error.message);
+
+      // Reset button state
+      generateBtn.disabled = false;
+      generateBtnText.style.display = 'inline';
+      generateBtnLoading.style.display = 'none';
+    }
+  }
+
+  // Handle save AI-generated modules
+  async handleSaveAiModules() {
+    if (!this.generatedCurriculum || !this.generatedCurriculum.modules) {
+      alert('No curriculum to save. Please generate one first.');
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveAiModules');
+    const originalText = saveBtn.innerHTML;
+
+    try {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '⏳ Saving...';
+
+      const classId = this.generatedCurriculum.classId;
+      let savedCount = 0;
+
+      // Insert modules and steps
+      for (const module of this.generatedCurriculum.modules) {
+        // Insert module
+        const { data: moduleData, error: moduleError } = await this.supabase
+          .from('modules')
+          .insert({
+            class_id: classId,
+            title: module.title,
+            description: module.description,
+            order_number: module.order_number
+          })
+          .select()
+          .single();
+
+        if (moduleError) throw moduleError;
+
+        // Insert steps for this module
+        for (const step of module.steps) {
+          const { error: stepError } = await this.supabase
+            .from('steps')
+            .insert({
+              module_id: moduleData.id,
+              title: step.title,
+              content: step.content,
+              order_number: step.order_number,
+              estimated_minutes: step.estimated_minutes
+            });
+
+          if (stepError) throw stepError;
+          savedCount++;
+        }
+      }
+
+      alert(`✅ Successfully saved ${this.generatedCurriculum.modules.length} modules with ${savedCount} steps!`);
+
+      // Clear generated curriculum
+      this.generatedCurriculum = null;
+
+      // Close modal
+      this.hideModal('aiModuleBuilderModal');
+
+      // Reload class view if we're viewing this class
+      if (this.currentClassId === classId) {
+        await this.loadClassView(classId);
+      }
+
+    } catch (error) {
+      console.error('Error saving modules:', error);
+      alert('Failed to save curriculum: ' + error.message);
+
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
     }
   }
 
