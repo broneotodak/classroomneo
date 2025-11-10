@@ -66,10 +66,13 @@
                 <!-- Logged in state -->
                 <div id="navLoggedIn" class="nav-auth" style="display: none;">
                     <a href="#dashboard" class="nav-link">Dashboard</a>
-                    <a href="#admin" class="nav-link" id="adminNavLink" style="display: none;">
-                        <span class="admin-badge">👨‍🏫 Admin</span>
+                    <a href="#trainer" class="nav-link" id="trainerNavLink" style="display: none;">
+                        <span class="admin-badge">👨‍🏫 Trainer</span>
                     </a>
-                    
+                    <a href="#admin" class="nav-link" id="adminNavLink" style="display: none;">
+                        <span class="admin-badge">🔧 Admin</span>
+                    </a>
+
                     <!-- View As Student Toggle (for admins) -->
                     <div id="viewAsStudentToggle" class="view-as-toggle" style="display: none;">
                         <label class="toggle-switch">
@@ -376,6 +379,90 @@
                         <div class="loading">Select a step to begin...</div>
                     </div>
                 </main>
+            </div>
+        </section>
+
+        <!-- Trainer Dashboard Page -->
+        <section id="trainer" class="page-section">
+            <div class="container">
+                <div class="admin-header">
+                    <h1>👨‍🏫 Trainer Dashboard</h1>
+                    <p class="admin-subtitle">Manage your classes and students</p>
+                </div>
+
+                <!-- Trainer Stats -->
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-content">
+                            <div class="stat-label">My Classes</div>
+                            <div class="stat-value" id="trainerTotalClasses">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Students</div>
+                            <div class="stat-value" id="trainerTotalStudents">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Pending Submissions</div>
+                            <div class="stat-value" id="trainerPendingSubmissions">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Avg. Grade</div>
+                            <div class="stat-value" id="trainerAvgGrade">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Classes Management -->
+                <div class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>My Classes</h2>
+                        <div class="header-buttons">
+                            <button class="btn btn-secondary btn-small" id="trainerAiModuleBuilder">🤖 AI Module Builder</button>
+                            <button class="btn btn-primary btn-small" id="trainerCreateClass">➕ Create Class</button>
+                        </div>
+                    </div>
+                    <div id="trainerClassesList" class="classes-list">
+                        <div class="loading">Loading your classes...</div>
+                    </div>
+                </div>
+
+                <!-- My Students -->
+                <div class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>My Students</h2>
+                        <button class="btn btn-primary btn-small" id="trainerRefreshStudents">🔄 Refresh</button>
+                    </div>
+                    <div class="roster-filters">
+                        <select id="trainerClassFilter" class="filter-select">
+                            <option value="">All My Classes</option>
+                        </select>
+                        <input type="text" id="trainerSearchStudents" class="filter-input" placeholder="Search students...">
+                    </div>
+                    <div id="trainerStudentsList" class="student-roster">
+                        <div class="loading">Loading students...</div>
+                    </div>
+                </div>
+
+                <!-- Recent Submissions -->
+                <div class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>📝 Recent Submissions</h2>
+                        <button class="btn btn-secondary btn-small" id="trainerRefreshSubmissions">🔄 Refresh</button>
+                    </div>
+                    <div id="trainerSubmissionsList" class="submissions-overview">
+                        <div class="loading">Loading submissions...</div>
+                    </div>
+                </div>
             </div>
         </section>
 

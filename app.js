@@ -94,17 +94,24 @@ class AIClassroom {
 
     try {
       const profile = await this.auth.getUserProfile();
-      const isAdmin = profile && (profile.role === 'admin' || profile.role === 'trainer');
-      
-      // Show/hide admin nav link
+      const isAdmin = profile && profile.role === 'admin';
+      const isTrainer = profile && (profile.role === 'trainer' || profile.role === 'admin');
+
+      // Show/hide trainer nav link
+      const trainerNavLink = document.getElementById('trainerNavLink');
+      if (trainerNavLink) {
+        trainerNavLink.style.display = isTrainer ? 'block' : 'none';
+      }
+
+      // Show/hide admin nav link (admins only)
       const adminNavLink = document.getElementById('adminNavLink');
       if (adminNavLink) {
         adminNavLink.style.display = isAdmin ? 'block' : 'none';
       }
 
-      // Show "View As Student" toggle for admins
+      // Show "View As Student" toggle for trainers and admins
       const viewAsToggle = document.getElementById('viewAsStudentToggle');
-      if (viewAsToggle && isAdmin) {
+      if (viewAsToggle && isTrainer) {
         viewAsToggle.style.display = 'flex';
         this.updateViewAsToggle();
       }
@@ -120,7 +127,7 @@ class AIClassroom {
     this.viewAsStudent = !this.viewAsStudent;
     localStorage.setItem('viewAsStudent', this.viewAsStudent.toString());
     this.updateViewAsToggle();
-    
+
     // Reload current page to apply the view
     window.location.reload();
   }
@@ -129,12 +136,15 @@ class AIClassroom {
     const toggle = document.getElementById('viewAsStudentToggle');
     const checkbox = document.getElementById('viewAsStudentCheckbox');
     const label = document.getElementById('viewAsStudentLabel');
-    
+
+    const profile = this.auth.currentProfile || {};
+    const roleLabel = profile.role === 'admin' ? 'Admin' : 'Trainer';
+
     if (checkbox) {
       checkbox.checked = this.viewAsStudent;
     }
     if (label) {
-      label.textContent = this.viewAsStudent ? 'Viewing as: Student' : 'Viewing as: Admin';
+      label.textContent = this.viewAsStudent ? 'Viewing as: Student' : `Viewing as: ${roleLabel}`;
     }
   }
 
@@ -269,6 +279,12 @@ class AIClassroom {
     document.getElementById('submitTrainerRequest')?.addEventListener('click', () => this.handleSubmitTrainerRequest());
     document.getElementById('refreshRequestsBtn')?.addEventListener('click', () => this.loadTrainerRequests());
 
+    // Trainer dashboard
+    document.getElementById('trainerCreateClass')?.addEventListener('click', () => this.showCreateClassModal());
+    document.getElementById('trainerAiModuleBuilder')?.addEventListener('click', () => this.showAiModuleBuilder());
+    document.getElementById('trainerRefreshStudents')?.addEventListener('click', () => this.loadTrainerStudents());
+    document.getElementById('trainerRefreshSubmissions')?.addEventListener('click', () => this.loadTrainerSubmissions());
+
     // View submissions modal
     document.getElementById('closeViewSubmissions')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
     document.getElementById('closeSubmissionsModal')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
@@ -291,7 +307,7 @@ class AIClassroom {
   // Navigate to a page
   async navigateTo(page, params = [], updateHistory = true) {
     // Check authentication for protected pages
-    if (['dashboard', 'learning', 'progress', 'admin'].includes(page)) {
+    if (['dashboard', 'learning', 'progress', 'trainer', 'admin'].includes(page)) {
       if (!this.auth?.isAuthenticated()) {
         this.showLoginPrompt();
         page = 'home';
@@ -322,6 +338,8 @@ class AIClassroom {
         this.renderLearning(params);
       } else if (page === 'community') {
         this.loadMessages();
+      } else if (page === 'trainer') {
+        await this.renderTrainerDashboard();
       } else if (page === 'admin') {
         await this.renderAdminDashboard();
       } else if (page === 'class-detail') {
@@ -1731,6 +1749,366 @@ class AIClassroom {
     );
 
     this.renderStudentTable(filtered);
+  }
+
+  // ==========================================
+  // TRAINER DASHBOARD FUNCTIONS
+  // ==========================================
+
+  async renderTrainerDashboard() {
+    // Check if user is trainer or admin
+    const profile = await this.auth.getUserProfile();
+    const isTrainer = profile && (profile.role === 'trainer' || profile.role === 'admin');
+
+    if (!isTrainer) {
+      alert('Access denied. Trainer privileges required.');
+      this.navigateTo('dashboard');
+      return;
+    }
+
+    await this.loadTrainerStats();
+    await this.loadTrainerClasses();
+    await this.loadTrainerStudents();
+    await this.loadTrainerSubmissions();
+  }
+
+  async loadTrainerStats() {
+    try {
+      const user = this.auth.getCurrentUser();
+
+      // Get trainer's classes count
+      const { count: classesCount } = await this.supabase
+        .from('classes')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', user.id);
+
+      document.getElementById('trainerTotalClasses').textContent = classesCount || 0;
+
+      // Get total students across trainer's classes
+      const { data: enrollments } = await this.supabase
+        .from('class_enrollments')
+        .select(`
+          *,
+          class:classes!inner(trainer_id)
+        `)
+        .eq('class.trainer_id', user.id)
+        .eq('status', 'active');
+
+      const uniqueStudents = new Set((enrollments || []).map(e => e.student_id));
+      document.getElementById('trainerTotalStudents').textContent = uniqueStudents.size;
+
+      // Get pending submissions count
+      const { count: pendingCount } = await this.supabase
+        .from('submissions')
+        .select(`
+          *,
+          assignment:assignments!inner(
+            step:steps!inner(
+              module:modules!inner(
+                class:classes!inner(trainer_id)
+              )
+            )
+          )
+        `, { count: 'exact', head: true })
+        .eq('assignment.step.module.class.trainer_id', user.id)
+        .is('graded_at', null);
+
+      document.getElementById('trainerPendingSubmissions').textContent = pendingCount || 0;
+
+      // Calculate average grade
+      const { data: grades } = await this.supabase
+        .from('grades')
+        .select(`
+          score,
+          submission:submissions!inner(
+            assignment:assignments!inner(
+              step:steps!inner(
+                module:modules!inner(
+                  class:classes!inner(trainer_id)
+                )
+              )
+            )
+          )
+        `)
+        .eq('submission.assignment.step.module.class.trainer_id', user.id);
+
+      if (grades && grades.length > 0) {
+        const avgGrade = (grades.reduce((sum, g) => sum + g.score, 0) / grades.length).toFixed(1);
+        document.getElementById('trainerAvgGrade').textContent = `${avgGrade}/5`;
+      } else {
+        document.getElementById('trainerAvgGrade').textContent = '--';
+      }
+
+    } catch (error) {
+      console.error('Error loading trainer stats:', error);
+    }
+  }
+
+  async loadTrainerClasses() {
+    const container = document.getElementById('trainerClassesList');
+    if (!container) return;
+
+    try {
+      const user = this.auth.getCurrentUser();
+
+      const { data: classes, error } = await this.supabase
+        .from('classes')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!classes || classes.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>You haven't created any classes yet. Click "Create Class" to start!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Use the existing admin class rendering (it's the same functionality)
+      container.innerHTML = await Promise.all(
+        classes.map(async (cls) => {
+          const { count: enrolledCount } = await this.supabase
+            .from('class_enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('class_id', cls.id)
+            .eq('status', 'active');
+
+          return `
+            <div class="class-card">
+              <div class="class-card-header">
+                <h3>${this.escapeHtml(cls.name)}</h3>
+                <span class="class-badge ${cls.is_active ? 'active' : 'inactive'}">
+                  ${cls.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <p class="class-description">${this.escapeHtml(cls.description || '')}</p>
+              <div class="class-meta">
+                <span>👥 ${enrolledCount || 0} students</span>
+                <span>📅 ${new Date(cls.created_at).toLocaleDateString()}</span>
+              </div>
+              <div class="class-actions">
+                <button class="btn btn-secondary btn-small" onclick="app.viewClassDetail(${cls.id})">
+                  👁️ View
+                </button>
+                <button class="btn btn-primary btn-small" onclick="app.editClass(${cls.id})">
+                  ✏️ Edit
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="app.showManageStudentsModal(${cls.id}, '${this.escapeHtml(cls.name).replace(/'/g, "\\'")}')">
+                  👥 Students
+                </button>
+              </div>
+            </div>
+          `;
+        })
+      ).then(html => html.join(''));
+
+      // Populate class filter dropdown
+      const classFilter = document.getElementById('trainerClassFilter');
+      if (classFilter) {
+        classFilter.innerHTML = `
+          <option value="">All My Classes</option>
+          ${classes.map(cls => `
+            <option value="${cls.id}">${this.escapeHtml(cls.name)}</option>
+          `).join('')}
+        `;
+      }
+
+    } catch (error) {
+      console.error('Error loading trainer classes:', error);
+      container.innerHTML = `<div class="error-message">Failed to load classes</div>`;
+    }
+  }
+
+  async loadTrainerStudents() {
+    const container = document.getElementById('trainerStudentsList');
+    if (!container) return;
+
+    try {
+      const user = this.auth.getCurrentUser();
+
+      // Get all students enrolled in trainer's classes
+      const { data: enrollments, error } = await this.supabase
+        .from('class_enrollments')
+        .select(`
+          *,
+          class:classes!inner(id, name, trainer_id),
+          student:users_profile!class_enrollments_student_id_fkey(*)
+        `)
+        .eq('class.trainer_id', user.id)
+        .eq('status', 'active')
+        .order('enrolled_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!enrollments || enrollments.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No students enrolled in your classes yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = enrollments.map(enrollment => {
+        const student = enrollment.student;
+        const enrolledDate = new Date(enrollment.enrolled_at).toLocaleDateString();
+
+        return `
+          <div class="student-card">
+            <div class="student-avatar">
+              <img src="${student.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.github_username || 'Student')}"
+                   alt="${student.github_username}">
+            </div>
+            <div class="student-info">
+              <h4>${this.escapeHtml(student.github_username || student.full_name || 'Student')}</h4>
+              <p class="student-email">${this.escapeHtml(student.email || '')}</p>
+              <div class="student-meta">
+                <span class="role-badge role-student">${this.escapeHtml(enrollment.class.name)}</span>
+                <span class="student-enrolled">Enrolled: ${enrolledDate}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading trainer students:', error);
+      container.innerHTML = `<div class="error-message">Failed to load students</div>`;
+    }
+  }
+
+  async loadTrainerSubmissions() {
+    const container = document.getElementById('trainerSubmissionsList');
+    if (!container) return;
+
+    try {
+      const user = this.auth.getCurrentUser();
+
+      // Get recent submissions for trainer's classes (simplified query)
+      const { data: classes } = await this.supabase
+        .from('classes')
+        .select('id')
+        .eq('trainer_id', user.id);
+
+      if (!classes || classes.length === 0) {
+        container.innerHTML = '<div class="loading">No classes yet</div>';
+        return;
+      }
+
+      const classIds = classes.map(c => c.id);
+
+      // Get modules for these classes
+      const { data: modules } = await this.supabase
+        .from('modules')
+        .select('id')
+        .in('class_id', classIds);
+
+      if (!modules || modules.length === 0) {
+        container.innerHTML = '<div class="loading">No modules yet</div>';
+        return;
+      }
+
+      const moduleIds = modules.map(m => m.id);
+
+      // Get steps
+      const { data: steps } = await this.supabase
+        .from('steps')
+        .select('id')
+        .in('module_id', moduleIds);
+
+      if (!steps || steps.length === 0) {
+        container.innerHTML = '<div class="loading">No steps yet</div>';
+        return;
+      }
+
+      const stepIds = steps.map(s => s.id);
+
+      // Get assignments
+      const { data: assignments } = await this.supabase
+        .from('assignments')
+        .select('id, title, step_id')
+        .in('step_id', stepIds);
+
+      if (!assignments || assignments.length === 0) {
+        container.innerHTML = '<div class="loading">No assignments yet</div>';
+        return;
+      }
+
+      const assignmentIds = assignments.map(a => a.id);
+
+      // Get submissions
+      const { data: submissions, error } = await this.supabase
+        .from('submissions')
+        .select('*')
+        .in('assignment_id', assignmentIds)
+        .order('submitted_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      if (!submissions || submissions.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No submissions yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Fetch additional details for each submission
+      const submissionsWithDetails = await Promise.all(
+        submissions.map(async (sub) => {
+          const assignment = assignments.find(a => a.id === sub.assignment_id);
+
+          const { data: student } = await this.supabase
+            .from('users_profile')
+            .select('github_username, github_avatar_url')
+            .eq('id', sub.student_id)
+            .maybeSingle();
+
+          return {
+            ...sub,
+            assignment_title: assignment?.title || 'Unknown',
+            student_name: student?.github_username || 'Unknown',
+            student_avatar: student?.github_avatar_url
+          };
+        })
+      );
+
+      container.innerHTML = submissionsWithDetails.map(sub => {
+        const isGraded = sub.graded_at !== null;
+        const submittedDate = new Date(sub.submitted_at).toLocaleDateString();
+
+        return `
+          <div class="submission-card">
+            <div class="submission-header">
+              <img src="${sub.student_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sub.student_name)}"
+                   class="submission-avatar"
+                   alt="${sub.student_name}">
+              <div>
+                <h4>${this.escapeHtml(sub.assignment_title)}</h4>
+                <p>by ${this.escapeHtml(sub.student_name)}</p>
+              </div>
+              <span class="submission-badge ${isGraded ? 'graded' : 'pending'}">
+                ${isGraded ? '✅ Graded' : '⏳ Pending'}
+              </span>
+            </div>
+            <p class="submission-meta">Submitted: ${submittedDate}</p>
+            <button class="btn btn-primary btn-small" onclick="app.viewSubmissionDetails(${sub.id})">
+              View Details
+            </button>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading trainer submissions:', error);
+      container.innerHTML = `<div class="error-message">Failed to load submissions</div>`;
+    }
   }
 
   // ==========================================
@@ -4219,13 +4597,10 @@ class AIClassroom {
     try {
       container.innerHTML = '<div class="loading">Loading trainer requests...</div>';
 
-      // Fetch pending requests with user profiles
+      // Fetch pending requests
       const { data: requests, error } = await this.supabase
         .from('trainer_requests')
-        .select(`
-          *,
-          user:users_profile!trainer_requests_user_id_fkey(*)
-        `)
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -4241,9 +4616,24 @@ class AIClassroom {
         return;
       }
 
+      // Fetch user profiles for each request
+      const userIds = requests.map(r => r.user_id);
+      const { data: profiles, error: profileError } = await this.supabase
+        .from('users_profile')
+        .select('*')
+        .in('id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Create a map of user_id to profile
+      const profileMap = {};
+      (profiles || []).forEach(p => {
+        profileMap[p.id] = p;
+      });
+
       // Render requests
       container.innerHTML = requests.map(request => {
-        const user = request.user;
+        const user = profileMap[request.user_id] || {};
         const createdDate = new Date(request.created_at).toLocaleDateString();
 
         return `
