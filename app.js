@@ -2209,6 +2209,12 @@ class AIClassroom {
         .from('classes')
         .select(`
           *,
+          is_locked,
+          is_archived,
+          locked_at,
+          locked_by,
+          archived_at,
+          archived_by,
           enrollments:class_enrollments(count)
         `)
         .order('created_at', { ascending: false });
@@ -2231,12 +2237,12 @@ class AIClassroom {
 
   renderClassesList(classes) {
     const container = document.getElementById('classesList');
-    
+
     container.innerHTML = classes.map(cls => {
       const enrollmentCount = cls.enrollments?.[0]?.count || 0;
       const startDate = cls.start_date ? new Date(cls.start_date).toLocaleDateString() : 'Not set';
       const endDate = cls.end_date ? new Date(cls.end_date).toLocaleDateString() : 'Not set';
-      
+
       return `
         <div class="class-item" data-class-id="${cls.id}">
           <div class="class-item-header">
@@ -2244,7 +2250,11 @@ class AIClassroom {
               <div class="class-item-title">${this.escapeHtml(cls.name)}</div>
               <div class="class-item-meta">Created ${this.formatDate(cls.created_at)}</div>
             </div>
-            <span class="module-badge">${cls.is_active ? 'Active' : 'Inactive'}</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              ${cls.is_locked ? '<span class="status-badge" style="background: #ff6b6b;">🔒 Locked</span>' : ''}
+              ${cls.is_archived ? '<span class="status-badge" style="background: #868e96;">📦 Archived</span>' : ''}
+              <span class="module-badge">${cls.is_active ? 'Active' : 'Inactive'}</span>
+            </div>
           </div>
           ${cls.description ? `<div class="class-item-description">${this.escapeHtml(cls.description)}</div>` : ''}
           <div class="class-item-stats">
@@ -2264,6 +2274,14 @@ class AIClassroom {
             <button class="btn btn-secondary btn-small-icon" onclick="app.editClass(${cls.id})">
               ✏️ Edit
             </button>
+            ${cls.is_locked
+              ? `<button class="btn btn-secondary btn-small-icon" onclick="app.unlockClass(${cls.id})">🔓 Unlock</button>`
+              : `<button class="btn btn-secondary btn-small-icon" onclick="app.lockClass(${cls.id})">🔒 Lock</button>`
+            }
+            ${cls.is_archived
+              ? `<button class="btn btn-secondary btn-small-icon" onclick="app.unarchiveClass(${cls.id})">📂 Unarchive</button>`
+              : `<button class="btn btn-secondary btn-small-icon" onclick="app.archiveClass(${cls.id})">📦 Archive</button>`
+            }
             <button class="btn btn-secondary btn-small-icon" onclick="app.deleteClass(${cls.id})">
               🗑️ Delete
             </button>
@@ -2776,6 +2794,88 @@ class AIClassroom {
     } catch (error) {
       console.error('Error deleting class:', error);
       alert('Failed to delete class. Please try again.');
+    }
+  }
+
+  // Lock/Unlock class (admin only)
+  async lockClass(classId) {
+    if (!confirm('Lock this class? This will prevent any modifications to class content, modules, steps, and assignments.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .rpc('lock_class', { p_class_id: classId });
+
+      if (error) throw error;
+
+      alert('✅ Class locked successfully');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error locking class:', error);
+      alert(error.message || 'Failed to lock class. Please try again.');
+    }
+  }
+
+  async unlockClass(classId) {
+    if (!confirm('Unlock this class? This will allow modifications to class content again.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .rpc('unlock_class', { p_class_id: classId });
+
+      if (error) throw error;
+
+      alert('✅ Class unlocked successfully');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error unlocking class:', error);
+      alert(error.message || 'Failed to unlock class. Please try again.');
+    }
+  }
+
+  // Archive/Unarchive class (admin only)
+  async archiveClass(classId) {
+    if (!confirm('Archive this class? This will hide it from active lists and mark it as inactive, but all data will be preserved for history.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .rpc('archive_class', { p_class_id: classId });
+
+      if (error) throw error;
+
+      alert('✅ Class archived successfully');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error archiving class:', error);
+      alert(error.message || 'Failed to archive class. Please try again.');
+    }
+  }
+
+  async unarchiveClass(classId) {
+    if (!confirm('Unarchive this class? This will make it visible in active lists again.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .rpc('unarchive_class', { p_class_id: classId });
+
+      if (error) throw error;
+
+      alert('✅ Class unarchived successfully');
+      await this.loadClasses();
+      await this.loadAdminStats();
+    } catch (error) {
+      console.error('Error unarchiving class:', error);
+      alert(error.message || 'Failed to unarchive class. Please try again.');
     }
   }
 

@@ -4810,3 +4810,78 @@ a:hover::after {
   }
 }
 
+/* ==========================================
+   TRAINER DASHBOARD - STUDENT CARDS
+   ========================================== */
+
+.student-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.student-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}
+
+.student-card .student-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.student-card .student-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.student-card .student-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-card .student-info h4 {
+  margin: 0 0 4px 0;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.student-card .student-email {
+  margin: 0 0 8px 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.student-card .student-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.student-card .student-enrolled {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .student-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-card .student-avatar {
+    align-self: center;
+  }
+}
+
