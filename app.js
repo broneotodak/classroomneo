@@ -4539,8 +4539,8 @@ class AIClassroom {
       becomeTrainerSection.style.display = 'none';
       requestStatusSection.style.display = 'none';
 
-      // Only show for students
-      if (profile.role !== 'student') return;
+      // Only show for students (or when viewing as student)
+      if (profile.role !== 'student' && !this.viewAsStudent) return;
 
       // Check if user has any trainer requests
       const { data: requests, error } = await this.supabase
@@ -4623,6 +4623,13 @@ class AIClassroom {
     const reasonInput = document.getElementById('trainerReason');
     const submitBtn = document.getElementById('submitTrainerRequest');
     const reason = reasonInput.value.trim();
+
+    // Check actual role - prevent trainers/admins from submitting when viewing as student
+    const profile = await this.auth.getUserProfile();
+    if (profile.role !== 'student') {
+      alert('You are already a trainer or admin. You cannot submit a trainer request.');
+      return;
+    }
 
     if (!reason) {
       alert('Please provide a reason for your request');
