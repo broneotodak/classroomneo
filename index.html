@@ -222,6 +222,29 @@
                     </div>
                 </div>
 
+                <!-- Become a Trainer (Students Only) -->
+                <div id="becomeTrainerSection" class="become-trainer-section" style="display: none;">
+                    <div class="trainer-promo-card">
+                        <div class="trainer-promo-content">
+                            <div class="trainer-promo-icon">🎓</div>
+                            <div class="trainer-promo-text">
+                                <h3>Interested in Teaching?</h3>
+                                <p>Share your knowledge and create your own courses!</p>
+                            </div>
+                            <button id="requestTrainerBtn" class="btn btn-secondary">
+                                Request Trainer Access
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trainer Request Status (If pending/approved/rejected) -->
+                <div id="trainerRequestStatus" class="trainer-request-status" style="display: none;">
+                    <div class="request-status-card" id="requestStatusCard">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
                 <!-- Continue Learning -->
                 <div class="continue-section">
                     <h2>Continue Learning</h2>
@@ -393,6 +416,17 @@
                             <div class="stat-label">Active This Week</div>
                             <div class="stat-value" id="activeThisWeek">0</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Trainer Requests (Admin Only) -->
+                <div class="admin-section" id="trainerRequestsSection" style="display: none;">
+                    <div class="section-header-flex">
+                        <h2>🎓 Trainer Requests</h2>
+                        <button class="btn btn-secondary btn-small" id="refreshRequestsBtn">🔄 Refresh</button>
+                    </div>
+                    <div id="trainerRequestsList" class="trainer-requests-list">
+                        <div class="loading">Loading trainer requests...</div>
                     </div>
                 </div>
 
@@ -645,6 +679,45 @@
                     <span id="generateBtnLoading" style="display: none;">⏳ Generating...</span>
                 </button>
                 <button class="btn btn-success" id="saveAiModules" style="display: none;">✅ Save to Class</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Trainer Access Modal -->
+    <div id="requestTrainerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎓 Request Trainer Access</h2>
+                <button class="modal-close" id="closeRequestTrainer">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="trainer-request-intro">
+                    <p><strong>Why become a trainer?</strong></p>
+                    <ul>
+                        <li>Create and manage your own classes</li>
+                        <li>Build custom curriculum with AI assistance</li>
+                        <li>Track student progress and provide feedback</li>
+                        <li>Share your expertise with learners worldwide</li>
+                    </ul>
+                </div>
+
+                <form id="requestTrainerForm">
+                    <div class="form-group">
+                        <label for="trainerReason">Why do you want to become a trainer? *</label>
+                        <textarea
+                            id="trainerReason"
+                            class="form-textarea"
+                            rows="6"
+                            placeholder="Tell us about your teaching experience, expertise, and why you'd like to create courses on our platform..."
+                            required
+                        ></textarea>
+                        <small class="form-help">Please provide details about your background and teaching goals</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelTrainerRequest">Cancel</button>
+                <button class="btn btn-primary" id="submitTrainerRequest">Submit Request</button>
             </div>
         </div>
     </div>

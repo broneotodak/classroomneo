@@ -261,7 +261,14 @@ class AIClassroom {
     });
     document.getElementById('saveEnrollments')?.addEventListener('click', () => this.handleSaveEnrollments());
     document.getElementById('searchAvailableStudents')?.addEventListener('input', (e) => this.filterAvailableStudents(e.target.value));
-    
+
+    // Trainer request system
+    document.getElementById('requestTrainerBtn')?.addEventListener('click', () => this.showRequestTrainerModal());
+    document.getElementById('closeRequestTrainer')?.addEventListener('click', () => this.hideModal('requestTrainerModal'));
+    document.getElementById('cancelTrainerRequest')?.addEventListener('click', () => this.hideModal('requestTrainerModal'));
+    document.getElementById('submitTrainerRequest')?.addEventListener('click', () => this.handleSubmitTrainerRequest());
+    document.getElementById('refreshRequestsBtn')?.addEventListener('click', () => this.loadTrainerRequests());
+
     // View submissions modal
     document.getElementById('closeViewSubmissions')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
     document.getElementById('closeSubmissionsModal')?.addEventListener('click', () => this.hideModal('viewSubmissionsModal'));
@@ -780,12 +787,15 @@ class AIClassroom {
 
     // Load user's enrolled classes
     await this.loadEnrolledClasses();
-    
+
     // Load available classes (not enrolled)
     await this.loadAvailableClassesForDashboard();
-    
+
     // Calculate overall stats across all classes
     await this.calculateOverallStats();
+
+    // Check and show trainer request section (for students only)
+    await this.checkTrainerRequestStatus();
   }
 
   async loadEnrolledClasses() {
@@ -1446,10 +1456,17 @@ class AIClassroom {
       return;
     }
 
+    // Show trainer requests section for admins
+    const trainerRequestsSection = document.getElementById('trainerRequestsSection');
+    if (trainerRequestsSection) {
+      trainerRequestsSection.style.display = 'block';
+    }
+
     await this.loadStudentRoster();
     await this.loadAdminStats();
     await this.loadClasses();
     await this.loadAllSubmissionsAdmin();
+    await this.loadTrainerRequests();
   }
 
   async loadAllSubmissionsAdmin() {
@@ -4039,6 +4056,283 @@ class AIClassroom {
         downloadBtn.disabled = false;
         downloadBtn.innerHTML = '📥 Download as Image';
       }
+    }
+  }
+
+  // ==========================================
+  // TRAINER REQUEST SYSTEM
+  // ==========================================
+
+  // Check and show trainer request status for students
+  async checkTrainerRequestStatus() {
+    const becomeTrainerSection = document.getElementById('becomeTrainerSection');
+    const requestStatusSection = document.getElementById('trainerRequestStatus');
+    const statusCard = document.getElementById('requestStatusCard');
+
+    if (!becomeTrainerSection || !requestStatusSection) return;
+
+    try {
+      const profile = await this.auth.getUserProfile();
+
+      // Hide both sections by default
+      becomeTrainerSection.style.display = 'none';
+      requestStatusSection.style.display = 'none';
+
+      // Only show for students
+      if (profile.role !== 'student') return;
+
+      // Check if user has any trainer requests
+      const { data: requests, error } = await this.supabase
+        .from('trainer_requests')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (!requests || requests.length === 0) {
+        // No requests - show promo card
+        becomeTrainerSection.style.display = 'block';
+      } else {
+        const request = requests[0];
+
+        if (request.status === 'pending') {
+          // Show pending status
+          requestStatusSection.style.display = 'block';
+          statusCard.innerHTML = `
+            <div class="request-status-card pending">
+              <div class="request-status-header">
+                <h4>Trainer Request Pending</h4>
+                <span class="request-status-badge pending">Pending</span>
+              </div>
+              <p class="request-status-message">
+                Your trainer access request is being reviewed by our admin team.
+                We'll notify you once it's been processed.
+              </p>
+            </div>
+          `;
+        } else if (request.status === 'approved') {
+          // Show approved - user will be redirected to refresh their role
+          requestStatusSection.style.display = 'block';
+          statusCard.innerHTML = `
+            <div class="request-status-card approved">
+              <div class="request-status-header">
+                <h4>Request Approved!</h4>
+                <span class="request-status-badge approved">Approved</span>
+              </div>
+              <p class="request-status-message">
+                Congratulations! Your trainer access has been approved.
+                <strong>Please refresh the page</strong> to access your trainer dashboard.
+              </p>
+            </div>
+          `;
+        } else if (request.status === 'rejected') {
+          // Show rejected with option to apply again
+          requestStatusSection.style.display = 'block';
+          statusCard.innerHTML = `
+            <div class="request-status-card rejected">
+              <div class="request-status-header">
+                <h4>Request Not Approved</h4>
+                <span class="request-status-badge rejected">Rejected</span>
+              </div>
+              <p class="request-status-message">
+                ${request.admin_notes || 'Your trainer request was not approved at this time. You may submit a new request in the future.'}
+              </p>
+            </div>
+          `;
+          // Also show promo card so they can reapply
+          becomeTrainerSection.style.display = 'block';
+        }
+      }
+
+    } catch (error) {
+      console.error('Error checking trainer request status:', error);
+    }
+  }
+
+  // Show request trainer modal
+  showRequestTrainerModal() {
+    this.showModal('requestTrainerModal');
+    document.getElementById('trainerReason').value = '';
+  }
+
+  // Handle submit trainer request
+  async handleSubmitTrainerRequest() {
+    const reasonInput = document.getElementById('trainerReason');
+    const submitBtn = document.getElementById('submitTrainerRequest');
+    const reason = reasonInput.value.trim();
+
+    if (!reason) {
+      alert('Please provide a reason for your request');
+      return;
+    }
+
+    if (reason.length < 50) {
+      alert('Please provide more details (at least 50 characters)');
+      return;
+    }
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Submitting...';
+
+      const user = this.auth.getCurrentUser();
+
+      // Insert trainer request
+      const { error } = await this.supabase
+        .from('trainer_requests')
+        .insert({
+          user_id: user.id,
+          reason: reason,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      alert('✅ Trainer request submitted successfully! An admin will review your request.');
+
+      this.hideModal('requestTrainerModal');
+
+      // Refresh the dashboard to show pending status
+      await this.checkTrainerRequestStatus();
+
+    } catch (error) {
+      console.error('Error submitting trainer request:', error);
+
+      if (error.code === '23505') {
+        alert('You already have a pending trainer request.');
+      } else {
+        alert('Failed to submit request: ' + error.message);
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Submit Request';
+    }
+  }
+
+  // Load trainer requests (for admin)
+  async loadTrainerRequests() {
+    const container = document.getElementById('trainerRequestsList');
+    if (!container) return;
+
+    try {
+      container.innerHTML = '<div class="loading">Loading trainer requests...</div>';
+
+      // Fetch pending requests with user profiles
+      const { data: requests, error } = await this.supabase
+        .from('trainer_requests')
+        .select(`
+          *,
+          user:users_profile!trainer_requests_user_id_fkey(*)
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!requests || requests.length === 0) {
+        container.innerHTML = `
+          <div class="request-empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No pending trainer requests</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render requests
+      container.innerHTML = requests.map(request => {
+        const user = request.user;
+        const createdDate = new Date(request.created_at).toLocaleDateString();
+
+        return `
+          <div class="trainer-request-item" data-request-id="${request.id}">
+            <div class="request-item-header">
+              <div class="request-user-info">
+                <img src="${user.github_avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.github_username || 'User')}"
+                     class="request-user-avatar"
+                     alt="${user.github_username}">
+                <div class="request-user-details">
+                  <h4>${this.escapeHtml(user.github_username || user.full_name || 'User')}</h4>
+                  <p>${this.escapeHtml(user.email || '')}</p>
+                </div>
+              </div>
+              <div class="request-item-actions">
+                <button class="btn btn-success btn-small" onclick="app.approveTrainerRequest(${request.id})">
+                  ✅ Approve
+                </button>
+                <button class="btn btn-error btn-small" onclick="app.rejectTrainerRequest(${request.id})">
+                  ❌ Reject
+                </button>
+              </div>
+            </div>
+
+            <div class="request-reason">
+              <p>"${this.escapeHtml(request.reason)}"</p>
+            </div>
+
+            <div class="request-meta">
+              <span>📅 Requested: ${createdDate}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading trainer requests:', error);
+      container.innerHTML = `
+        <div class="error-message">Failed to load requests. Please try again.</div>
+      `;
+    }
+  }
+
+  // Approve trainer request
+  async approveTrainerRequest(requestId) {
+    if (!confirm('Are you sure you want to approve this trainer request?')) {
+      return;
+    }
+
+    try {
+      const { error } = await this.supabase.rpc('approve_trainer_request', {
+        request_id: requestId
+      });
+
+      if (error) throw error;
+
+      alert('✅ Trainer request approved! The user can now create classes.');
+
+      // Reload the requests list
+      await this.loadTrainerRequests();
+
+    } catch (error) {
+      console.error('Error approving request:', error);
+      alert('Failed to approve request: ' + error.message);
+    }
+  }
+
+  // Reject trainer request
+  async rejectTrainerRequest(requestId) {
+    const notes = prompt('Rejection reason (optional - will be shown to the user):');
+
+    if (notes === null) return; // User cancelled
+
+    try {
+      const { error } = await this.supabase.rpc('reject_trainer_request', {
+        request_id: requestId,
+        notes: notes || null
+      });
+
+      if (error) throw error;
+
+      alert('✅ Trainer request rejected.');
+
+      // Reload the requests list
+      await this.loadTrainerRequests();
+
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert('Failed to reject request: ' + error.message);
     }
   }
 
