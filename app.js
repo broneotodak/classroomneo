@@ -359,6 +359,20 @@ class AIClassroom {
     this.navigateTo('class-detail', [classId]);
   }
 
+  // View class submissions (for trainers)
+  async viewClassSubmissions(classId) {
+    // Simply navigate to class detail page which shows submissions
+    this.navigateTo('class-detail', [classId]);
+
+    // Scroll to submissions section after page loads
+    setTimeout(() => {
+      const submissionsSection = document.querySelector('.class-assignments-section');
+      if (submissionsSection) {
+        submissionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 500);
+  }
+
   // Render class detail page
   async renderClassDetail(classId) {
     try {
@@ -1900,6 +1914,9 @@ class AIClassroom {
                 <button class="btn btn-secondary btn-small" onclick="app.showManageStudentsModal(${cls.id}, '${this.escapeHtml(cls.name).replace(/'/g, "\\'")}')">
                   👥 Students
                 </button>
+                <button class="btn btn-secondary btn-small" onclick="app.viewClassSubmissions(${cls.id})">
+                  📝 Submissions
+                </button>
               </div>
             </div>
           `;
@@ -1930,19 +1947,34 @@ class AIClassroom {
     try {
       const user = this.auth.getCurrentUser();
 
-      // Get all students enrolled in trainer's classes
-      const { data: enrollments, error } = await this.supabase
+      // Get trainer's classes first
+      const { data: trainerClasses, error: classError } = await this.supabase
+        .from('classes')
+        .select('id, name')
+        .eq('trainer_id', user.id);
+
+      if (classError) throw classError;
+
+      if (!trainerClasses || trainerClasses.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No students enrolled in your classes yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const classIds = trainerClasses.map(c => c.id);
+
+      // Get enrollments for these classes
+      const { data: enrollments, error: enrollError } = await this.supabase
         .from('class_enrollments')
-        .select(`
-          *,
-          class:classes!inner(id, name, trainer_id),
-          student:users_profile!class_enrollments_student_id_fkey(*)
-        `)
-        .eq('class.trainer_id', user.id)
+        .select('*')
+        .in('class_id', classIds)
         .eq('status', 'active')
         .order('enrolled_at', { ascending: false });
 
-      if (error) throw error;
+      if (enrollError) throw enrollError;
 
       if (!enrollments || enrollments.length === 0) {
         container.innerHTML = `
@@ -1953,8 +1985,29 @@ class AIClassroom {
         return;
       }
 
+      // Get student profiles
+      const studentIds = enrollments.map(e => e.student_id);
+      const { data: students, error: studentError } = await this.supabase
+        .from('users_profile')
+        .select('*')
+        .in('id', studentIds);
+
+      if (studentError) throw studentError;
+
+      // Create maps for easy lookup
+      const studentMap = {};
+      (students || []).forEach(s => {
+        studentMap[s.id] = s;
+      });
+
+      const classMap = {};
+      trainerClasses.forEach(c => {
+        classMap[c.id] = c;
+      });
+
       container.innerHTML = enrollments.map(enrollment => {
-        const student = enrollment.student;
+        const student = studentMap[enrollment.student_id] || {};
+        const className = classMap[enrollment.class_id]?.name || 'Unknown Class';
         const enrolledDate = new Date(enrollment.enrolled_at).toLocaleDateString();
 
         return `
@@ -1967,7 +2020,7 @@ class AIClassroom {
               <h4>${this.escapeHtml(student.github_username || student.full_name || 'Student')}</h4>
               <p class="student-email">${this.escapeHtml(student.email || '')}</p>
               <div class="student-meta">
-                <span class="role-badge role-student">${this.escapeHtml(enrollment.class.name)}</span>
+                <span class="role-badge role-student">${this.escapeHtml(className)}</span>
                 <span class="student-enrolled">Enrolled: ${enrolledDate}</span>
               </div>
             </div>
@@ -2079,28 +2132,58 @@ class AIClassroom {
         })
       );
 
+      // Fetch grades for submissions
+      for (const sub of submissionsWithDetails) {
+        const { data: grades } = await this.supabase
+          .from('grades')
+          .select('*')
+          .eq('submission_id', sub.id);
+
+        sub.grade = grades && grades.length > 0 ? grades[0] : null;
+      }
+
+      // Render submissions matching admin design
       container.innerHTML = submissionsWithDetails.map(sub => {
-        const isGraded = sub.graded_at !== null;
-        const submittedDate = new Date(sub.submitted_at).toLocaleDateString();
+        const grade = sub.grade;
 
         return `
-          <div class="submission-card">
+          <div class="submission-card ${grade ? 'graded' : sub.status}">
             <div class="submission-header">
-              <img src="${sub.student_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sub.student_name)}"
-                   class="submission-avatar"
-                   alt="${sub.student_name}">
-              <div>
-                <h4>${this.escapeHtml(sub.assignment_title)}</h4>
-                <p>by ${this.escapeHtml(sub.student_name)}</p>
+              <div class="student-info">
+                <img src="${sub.student_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sub.student_name)}"
+                     class="student-avatar"
+                     alt="${sub.student_name}">
+                <div class="student-details">
+                  <div class="student-name">${this.escapeHtml(sub.student_name)}</div>
+                  <div class="submission-time">${this.escapeHtml(sub.assignment_title)}</div>
+                  <div class="submission-time">Submitted ${this.formatDate(sub.submitted_at)}</div>
+                </div>
               </div>
-              <span class="submission-badge ${isGraded ? 'graded' : 'pending'}">
-                ${isGraded ? '✅ Graded' : '⏳ Pending'}
-              </span>
+              <div class="submission-status-group">
+                ${grade ? `
+                  <div class="grade-badge">
+                    <span class="grade-stars-small">${'⭐'.repeat(grade.score)}</span>
+                    <span class="grade-score-small">${grade.score}/5</span>
+                  </div>
+                ` : `
+                  <span class="status-badge status-${sub.status}">${sub.status}</span>
+                `}
+              </div>
             </div>
-            <p class="submission-meta">Submitted: ${submittedDate}</p>
-            <button class="btn btn-primary btn-small" onclick="app.viewSubmissionDetails(${sub.id})">
-              View Details
-            </button>
+
+            <div class="submission-actions" style="margin-top: 1rem;">
+              <button class="btn btn-secondary btn-small" onclick="app.showSubmission(${sub.id})">
+                View Details
+              </button>
+              ${!grade && sub.status === 'pending' ? `
+                <button class="btn btn-primary btn-small" onclick="app.manualGradeSubmission(${sub.id})">
+                  Grade Now
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="app.triggerAIGrading(${sub.id})">
+                  🤖 AI Grade
+                </button>
+              ` : ''}
+            </div>
           </div>
         `;
       }).join('');
