@@ -2475,6 +2475,16 @@ class AIClassroom {
     }
   }
 
+  // Helper: Generate URL-friendly slug from title
+  generateSlug(title, orderNumber) {
+    const baseSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, '');      // Remove leading/trailing hyphens
+
+    return `${orderNumber}-${baseSlug}`;
+  }
+
   // Handle save AI-generated modules
   async handleSaveAiModules() {
     if (!this.generatedCurriculum || !this.generatedCurriculum.modules) {
@@ -2494,11 +2504,15 @@ class AIClassroom {
 
       // Insert modules and steps
       for (const module of this.generatedCurriculum.modules) {
+        // Generate slug for module
+        const moduleSlug = this.generateSlug(module.title, module.order_number);
+
         // Insert module
         const { data: moduleData, error: moduleError } = await this.supabase
           .from('modules')
           .insert({
             class_id: classId,
+            slug: moduleSlug,
             title: module.title,
             description: module.description,
             order_number: module.order_number
@@ -2510,10 +2524,14 @@ class AIClassroom {
 
         // Insert steps for this module
         for (const step of module.steps) {
+          // Generate slug for step
+          const stepSlug = this.generateSlug(step.title, step.order_number);
+
           const { error: stepError } = await this.supabase
             .from('steps')
             .insert({
               module_id: moduleData.id,
+              slug: stepSlug,
               title: step.title,
               content: step.content,
               order_number: step.order_number,
