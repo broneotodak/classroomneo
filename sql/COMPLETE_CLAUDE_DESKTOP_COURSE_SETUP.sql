@@ -1,4 +1,4 @@
--- =====================================================
+ -- =====================================================
 -- ClassroomNeo: Complete Setup for Claude Desktop Course
 -- Run this ENTIRE script in Supabase SQL Editor
 -- =====================================================
