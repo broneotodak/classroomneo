@@ -6,8 +6,27 @@
   publish = "."
 
 # Redirect rules
+
+# Student API (for Claude Desktop integration)
 [[redirects]]
-  # Redirect all 404s to index.html for SPA-like behavior
+  from = "/api/student/*"
+  to = "/.netlify/functions/student-api/:splat"
+  status = 200
+
+# AI Grading API
+[[redirects]]
+  from = "/api/grade"
+  to = "/.netlify/functions/ai-grade"
+  status = 200
+
+# AI Module Builder API
+[[redirects]]
+  from = "/api/module-builder"
+  to = "/.netlify/functions/ai-module-builder"
+  status = 200
+
+# Redirect all 404s to index.html for SPA-like behavior
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

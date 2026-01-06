@@ -1,0 +1,86 @@
+{
+  "course": {
+    "name": "Claude Desktop Mastery",
+    "description": "Master Claude Desktop with MCP servers, extensions, and integrations. Learn to build powerful AI-assisted workflows for web development. Final project: Connect your Claude Desktop to ClassroomNeo!",
+    "prerequisites": ["Basic Tools"],
+    "duration_weeks": 4,
+    "difficulty": "intermediate"
+  },
+  "modules": [
+    {
+      "title": "Module 1: Introduction to Claude Desktop",
+      "description": "Understanding Claude Desktop's architecture and capabilities across different operating systems",
+      "order_number": 1,
+      "steps": [
+        {
+          "title": "1.1 What is Claude Desktop?",
+          "order_number": 1,
+          "estimated_minutes": 20,
+          "content": "# What is Claude Desktop?\n\nClaude Desktop is Anthropic's native application that brings Claude AI directly to your computer with powerful local capabilities.\n\n## Why Claude Desktop?\n\n- **Local File Access**: Read and work with files on your computer\n- **MCP Protocol**: Connect to external tools and services\n- **Extended Context**: Longer conversations with better memory\n- **Privacy**: Some processing stays local\n- **Integrations**: GitHub, databases, APIs, and more\n\n## Desktop vs Web\n\n| Feature | Claude.ai (Web) | Claude Desktop |\n|---------|-----------------|----------------|\n| File Access | Upload only | Full local access |\n| MCP Servers | Limited | Full support |\n| External Tools | No | Yes |\n| Offline Work | No | Partial |\n\n## What You'll Learn\n\nBy the end of this course, you'll be able to:\n1. Configure Claude Desktop for your OS\n2. Install and manage MCP servers\n3. Connect to GitHub, Netlify, and databases\n4. Build automated workflows\n5. **Connect Claude Desktop to this classroom!**"
+        },
+        {
+          "title": "1.2 Installation Guide (Choose Your OS)",
+          "order_number": 2,
+          "estimated_minutes": 30,
+          "content": "# Installing Claude Desktop\n\n## 🍎 MacOS Installation\n\n1. **Download**: Visit [claude.ai/download](https://claude.ai/download)\n2. **Install**: Open the `.dmg` file and drag to Applications\n3. **First Launch**: Open from Applications folder\n4. **Sign In**: Use your Anthropic account\n\n### MacOS-Specific Features\n- Native Apple Silicon support (M1/M2/M3)\n- Spotlight integration\n- Homebrew package management for MCP servers\n- Terminal/zsh integration\n\n## 🪟 Windows Installation\n\n1. **Download**: Visit [claude.ai/download](https://claude.ai/download)\n2. **Install**: Run the `.exe` installer\n3. **First Launch**: Find in Start Menu\n4. **Sign In**: Use your Anthropic account\n\n### Windows-Specific Features\n- PowerShell integration\n- WSL2 support for Linux tools\n- Windows Terminal compatibility\n- Chocolatey/Scoop for package management\n\n## ✅ Verification\n\nAfter installation, verify by:\n1. Opening Claude Desktop\n2. Checking Settings → About for version\n3. Testing a simple conversation\n\n**Assignment**: Screenshot your Claude Desktop 'About' page and share!"
+        },
+        {
+          "title": "1.3 Understanding the Claude Desktop Interface",
+          "order_number": 3,
+          "estimated_minutes": 25,
+          "content": "# The Claude Desktop Interface\n\n## Main Components\n\n### 1. Conversation Panel\n- Where you chat with Claude\n- Supports markdown, code blocks, images\n- Drag & drop files directly\n\n### 2. Sidebar\n- **Conversations**: Your chat history\n- **Projects**: Organize related chats\n- **Settings**: Configuration options\n\n### 3. Input Area\n- Text input with @ mentions\n- File attachment button\n- Voice input (if enabled)\n\n### 4. Settings Menu\n\n**Key Settings to Know:**\n- **Model Selection**: Choose Claude version\n- **MCP Servers**: Where the magic happens!\n- **Appearance**: Light/Dark mode\n- **Privacy**: Data handling preferences\n\n## Keyboard Shortcuts\n\n| Action | MacOS | Windows |\n|--------|-------|--------|\n| New Chat | ⌘ + N | Ctrl + N |\n| Settings | ⌘ + , | Ctrl + , |\n| Search | ⌘ + K | Ctrl + K |\n| Clear Chat | ⌘ + Shift + K | Ctrl + Shift + K |\n\n## Pro Tips\n\n1. **Use Projects** to organize by topic\n2. **Pin important chats** for quick access\n3. **Drag files** directly into the chat\n4. **Use @ mentions** to reference MCP tools"
+        }
+      ]
+    },
+    {
+      "title": "Module 2: MCP Servers - The Power Core",
+      "description": "Deep dive into Model Context Protocol (MCP) - the technology that makes Claude Desktop incredibly powerful",
+      "order_number": 2,
+      "steps": [
+        {
+          "title": "2.1 What is MCP?",
+          "order_number": 1,
+          "estimated_minutes": 30,
+          "content": "# Model Context Protocol (MCP)\n\n## The Game Changer\n\nMCP (Model Context Protocol) is an open protocol that allows Claude to:\n- **Read** from external data sources\n- **Write** to external services\n- **Execute** commands and scripts\n- **Connect** to APIs and databases\n\n## How MCP Works\n\n```\n┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐\n│  Claude Desktop │────▶│   MCP Server    │────▶│ External Service│\n│    (Client)     │◀────│   (Bridge)      │◀────│ (GitHub, DB...)│\n└─────────────────┘     └─────────────────┘     └─────────────────┘\n```\n\n## Types of MCP Servers\n\n1. **File System** - Read/write local files\n2. **Database** - Query PostgreSQL, SQLite, etc.\n3. **API Connectors** - GitHub, Slack, etc.\n4. **Custom Tools** - Build your own!\n\n## Official vs Community Servers\n\n**Official (by Anthropic):**\n- Filesystem\n- GitHub\n- Slack\n- Google Drive\n\n**Community (Awesome-MCP):**\n- Supabase\n- Neon Database\n- Netlify\n- And hundreds more!\n\n## Why This Matters\n\nWithout MCP: Claude can only chat\nWith MCP: Claude becomes your **AI-powered assistant** that can:\n- Commit code to GitHub\n- Deploy to Netlify\n- Query your database\n- Manage your files\n- And much more!"
+        },
+        {
+          "title": "2.2 MCP Configuration (MacOS)",
+          "order_number": 2,
+          "estimated_minutes": 45,
+          "content": "# MCP Configuration for MacOS 🍎\n\n## Configuration File Location\n\n```bash\n~/Library/Application Support/Claude/claude_desktop_config.json\n```\n\n## Creating Your First Config\n\n### Step 1: Open Terminal\n```bash\n# Create directory if needed\nmkdir -p ~/Library/Application\\ Support/Claude\n\n# Create/edit config file\nnano ~/Library/Application\\ Support/Claude/claude_desktop_config.json\n```\n\n### Step 2: Basic Config Structure\n```json\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-filesystem\",\n        \"/Users/YOUR_USERNAME/Projects\"\n      ]\n    }\n  }\n}\n```\n\n### Step 3: Prerequisites\n```bash\n# Install Node.js via Homebrew\nbrew install node\n\n# Verify installation\nnode --version\nnpm --version\n```\n\n### Step 4: Restart Claude Desktop\n- Quit Claude Desktop completely (⌘ + Q)\n- Reopen from Applications\n\n## Verify MCP is Working\n\nAsk Claude:\n> \"Can you list the files in my Projects folder?\"\n\nIf configured correctly, Claude will show your files!\n\n## Troubleshooting MacOS\n\n1. **Permission Issues**: Grant Full Disk Access in System Preferences\n2. **Node not found**: Ensure Homebrew bin is in PATH\n3. **Config syntax error**: Use `jsonlint` to validate\n\n**Assignment**: Configure filesystem MCP and screenshot Claude listing your files!"
+        },
+        {
+          "title": "2.3 MCP Configuration (Windows)",
+          "order_number": 3,
+          "estimated_minutes": 45,
+          "content": "# MCP Configuration for Windows 🪟\n\n## Configuration File Location\n\n```\n%APPDATA%\\Claude\\claude_desktop_config.json\n```\n\nOr typically:\n```\nC:\\Users\\YOUR_USERNAME\\AppData\\Roaming\\Claude\\claude_desktop_config.json\n```\n\n## Creating Your First Config\n\n### Step 1: Open PowerShell\n```powershell\n# Navigate to Claude config directory\ncd $env:APPDATA\\Claude\n\n# Create directory if needed\nNew-Item -ItemType Directory -Force -Path $env:APPDATA\\Claude\n\n# Create config file\nnotepad claude_desktop_config.json\n```\n\n### Step 2: Basic Config Structure\n```json\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-filesystem\",\n        \"C:\\\\Users\\\\YOUR_USERNAME\\\\Projects\"\n      ]\n    }\n  }\n}\n```\n\n**⚠️ Windows Note**: Use double backslashes `\\\\` in paths!\n\n### Step 3: Prerequisites\n```powershell\n# Install Node.js via Chocolatey\nchoco install nodejs\n\n# Or via Scoop\nscoop install nodejs\n\n# Or download from nodejs.org\n\n# Verify\nnode --version\nnpm --version\n```\n\n### Step 4: Restart Claude Desktop\n- Close from System Tray (right-click → Exit)\n- Reopen from Start Menu\n\n## Verify MCP is Working\n\nAsk Claude:\n> \"Can you list the files in my Projects folder?\"\n\n## Troubleshooting Windows\n\n1. **Path Issues**: Use forward slashes `/` or escaped backslashes `\\\\`\n2. **Node not found**: Run `refreshenv` or restart terminal\n3. **UAC Blocks**: Run terminal as Administrator\n\n**Assignment**: Configure filesystem MCP and screenshot Claude listing your files!"
+        },
+        {
+          "title": "2.4 Managing Multiple MCP Servers",
+          "order_number": 4,
+          "estimated_minutes": 35,
+          "content": "# Multi-Server MCP Configuration\n\n## Adding Multiple Servers\n\nYour config can have many servers running simultaneously:\n\n```json\n{\n  \"mcpServers\": {\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/path/to/projects\"]\n    },\n    \"github\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-github\"],\n      \"env\": {\n        \"GITHUB_PERSONAL_ACCESS_TOKEN\": \"ghp_xxxxxxxxxxxx\"\n      }\n    },\n    \"postgres\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-postgres\"],\n      \"env\": {\n        \"DATABASE_URL\": \"postgresql://user:pass@host:5432/db\"\n      }\n    }\n  }\n}\n```\n\n## Environment Variables\n\nSensitive data goes in `env` block:\n\n```json\n\"env\": {\n  \"API_KEY\": \"your-secret-key\",\n  \"DATABASE_URL\": \"connection-string\"\n}\n```\n\n## Server Categories\n\n### 🔧 Development\n- `filesystem` - File management\n- `github` - Git operations\n- `git` - Local git commands\n\n### 🗄️ Databases\n- `postgres` - PostgreSQL\n- `sqlite` - SQLite\n- `supabase` - Supabase integration\n\n### 🚀 Deployment\n- `netlify` - Deploy websites\n- `vercel` - Vercel deployments\n\n### 🔗 APIs\n- `fetch` - HTTP requests\n- `slack` - Team communication\n\n## Checking Active Servers\n\nIn Claude Desktop:\n1. Go to Settings\n2. Look for MCP Servers section\n3. Green = Active, Red = Error\n\n## Performance Tip\n\nOnly enable servers you need! Each server uses resources."
+        }
+      ]
+    },
+    {
+      "title": "Module 3: GitHub Integration",
+      "description": "Connect Claude Desktop to GitHub for powerful code management and collaboration",
+      "order_number": 3,
+      "steps": [
+        {
+          "title": "3.1 Setting Up GitHub MCP Server",
+          "order_number": 1,
+          "estimated_minutes": 40,
+          "content": "# GitHub MCP Integration\n\n## Prerequisites\n- GitHub account\n- Personal Access Token (PAT)\n\n## Creating a GitHub PAT\n\n1. Go to GitHub → Settings → Developer Settings\n2. Click 'Personal Access Tokens' → 'Tokens (classic)'\n3. Generate new token with scopes:\n   - `repo` (full control)\n   - `read:org`\n   - `gist`\n\n**⚠️ SAVE THIS TOKEN! You won't see it again!**\n\n## Configuration\n\n### MacOS\n```json\n{\n  \"mcpServers\": {\n    \"github\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-github\"],\n      \"env\": {\n        \"GITHUB_PERSONAL_ACCESS_TOKEN\": \"ghp_your_token_here\"\n      }\n    }\n  }\n}\n```\n\n### Windows\nSame config - just update path format if needed.\n\n## What Claude Can Do with GitHub\n\n✅ **Read Operations**\n- List repositories\n- View file contents\n- Check issues and PRs\n- Search code\n\n✅ **Write Operations**\n- Create repositories\n- Push commits\n- Create branches\n- Open issues/PRs\n- Merge PRs\n\n## Test Your Setup\n\nAsk Claude:\n> \"List my GitHub repositories\"\n> \"Show me the README of my [repo-name] repository\"\n\n**Assignment**: Connect GitHub and ask Claude to list your repos!"
+        },
+        {
+          "title": "3.2 Git Workflows with Claude",
+          "order_number": 2,
+          "estimated_minutes": 50,
+          "content": "# Git Workflows Powered by Claude\n\n## Common Workflows\n\n### 1. Code Review\n```\nYou: \"Review the latest PR in my project-name repo\"\n\nClaude will:\n- Fetch PR details\n- Analyze code changes\n- Provide suggestions\n- Check for issues\n```\n\n### 2. Create Feature Branch\n```\nYou: \"Create a new branch called 'feature/user-auth' in my-app repo\"\n\nClaude will:\n- Create the branch\n- Confirm creation\n- Suggest next steps\n```\n\n### 3. Commit Changes\n```\nYou: \"Commit the changes in /Projects/my-app with message 'Add login form'\"\n\nClaude will:\n- Stage changes\n- Create commit\n- Push to remote\n```\n\n### 4. Issue Management\n```\nYou: \"Create an issue in my-repo: 'Bug: Login fails on Safari' with label 'bug'\"\n```\n\n## Real-World Example\n\n```\nYou: \"I need to fix a bug in my website. Here's what's broken: [description]\n      Can you:\n      1. Create a bugfix branch\n      2. Look at the relevant files\n      3. Suggest a fix\n      4. Commit and create a PR\"\n```\n\nClaude handles the entire workflow!\n\n## Pro Tips\n\n1. **Be specific** about repo names\n2. **Describe intent** not just actions\n3. **Review before merge** - always verify Claude's changes\n\n## Security Note\n\n⚠️ Never share your PAT or config file\n⚠️ Review all commits before pushing to production\n⚠️ Use branch protection rules\n\n**Assignment**: Have Claude create a branch, make a commit, and create a PR!"
+        }
+      ]
+    }
+  ]
+}

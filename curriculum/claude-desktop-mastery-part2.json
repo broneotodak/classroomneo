@@ -1,0 +1,85 @@
+{
+  "modules_continued": [
+    {
+      "title": "Module 4: Netlify Deployment Integration",
+      "description": "Deploy and manage websites directly from Claude Desktop using Netlify MCP",
+      "order_number": 4,
+      "steps": [
+        {
+          "title": "4.1 Setting Up Netlify MCP",
+          "order_number": 1,
+          "estimated_minutes": 35,
+          "content": "# Netlify MCP Integration\n\n## Prerequisites\n- Netlify account\n- Netlify Personal Access Token\n\n## Getting Your Netlify Token\n\n1. Login to [app.netlify.com](https://app.netlify.com)\n2. Go to User Settings → Applications\n3. Click 'New access token'\n4. Name it: 'Claude Desktop'\n5. Copy and save the token\n\n## Configuration\n\n```json\n{\n  \"mcpServers\": {\n    \"netlify\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"netlify-mcp\"],\n      \"env\": {\n        \"NETLIFY_ACCESS_TOKEN\": \"your_token_here\"\n      }\n    }\n  }\n}\n```\n\n## Capabilities\n\n✅ **Site Management**\n- List all sites\n- Create new sites\n- Delete sites\n- Update site settings\n\n✅ **Deployments**\n- Trigger deploys\n- View deploy logs\n- Rollback deployments\n- Preview deploys\n\n✅ **Environment Variables**\n- View env vars\n- Set new variables\n- Delete variables\n\n## Quick Test\n\n```\nYou: \"List all my Netlify sites\"\nYou: \"Show me the last deployment status for my-site\"\n```\n\n**Assignment**: Connect Netlify and list your sites!"
+        },
+        {
+          "title": "4.2 Deploy Workflow: Code to Live",
+          "order_number": 2,
+          "estimated_minutes": 60,
+          "content": "# Complete Deployment Workflow\n\n## The Dream Workflow\n\n```\nCode → GitHub → Netlify → Live Site\n          ↑\n    Claude Desktop (orchestrates everything!)\n```\n\n## Real-World Scenario\n\n### Step 1: Create Project\n```\nYou: \"Create a new landing page for my product 'SuperApp'. \n      Use modern design with:\n      - Hero section\n      - Features list  \n      - Pricing table\n      - Contact form\"\n```\n\n### Step 2: Push to GitHub\n```\nYou: \"Create a new repo called 'superapp-landing' and push this code\"\n```\n\n### Step 3: Deploy to Netlify\n```\nYou: \"Deploy superapp-landing repo to Netlify\"\n```\n\n### Step 4: Custom Domain (Manual)\n```\nYou: \"What are the DNS settings I need for superapp.com?\"\n```\n\n## One-Shot Deployment\n\nYou can even do it all at once:\n\n```\nYou: \"Build a simple portfolio website with my projects,\n      push it to a new GitHub repo called 'my-portfolio',\n      and deploy it to Netlify.\"\n```\n\nClaude handles:\n1. ✅ Creates HTML/CSS/JS files\n2. ✅ Initializes git repo\n3. ✅ Creates GitHub repository\n4. ✅ Pushes code\n5. ✅ Triggers Netlify deploy\n6. ✅ Gives you the live URL!\n\n## Environment Variables\n\n```\nYou: \"Set these env vars on my-site:\n      - API_KEY: abc123\n      - DATABASE_URL: postgres://...\"\n```\n\n**Assignment**: Deploy a simple HTML page through this full workflow!"
+        }
+      ]
+    },
+    {
+      "title": "Module 5: Database Integration (Supabase & Neon)",
+      "description": "Connect Claude Desktop to databases for full-stack development capabilities",
+      "order_number": 5,
+      "steps": [
+        {
+          "title": "5.1 Supabase MCP Setup",
+          "order_number": 1,
+          "estimated_minutes": 45,
+          "content": "# Supabase Integration\n\n## Why Supabase?\n\n- PostgreSQL database\n- Authentication built-in\n- Real-time subscriptions\n- Storage for files\n- Edge functions\n- **FREE tier available!**\n\n## Prerequisites\n\n1. Supabase account ([supabase.com](https://supabase.com))\n2. A Supabase project\n3. Database URL and keys\n\n## Getting Credentials\n\n1. Go to your Supabase project\n2. Settings → API\n3. Copy:\n   - **Project URL**: `https://xxxxx.supabase.co`\n   - **Service Role Key**: `eyJhbG...` (keep secret!)\n\n## MCP Configuration\n\n```json\n{\n  \"mcpServers\": {\n    \"supabase\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@supabase/mcp-server\"],\n      \"env\": {\n        \"SUPABASE_URL\": \"https://your-project.supabase.co\",\n        \"SUPABASE_SERVICE_ROLE_KEY\": \"your-service-role-key\"\n      }\n    }\n  }\n}\n```\n\n## Capabilities\n\n✅ **Database Operations**\n- Execute SQL queries\n- Create/modify tables\n- Insert/update/delete data\n- Run migrations\n\n✅ **Auth Management**\n- List users\n- Manage permissions\n\n✅ **Storage**\n- Upload files\n- List buckets\n\n## Quick Test\n\n```\nYou: \"Show me all tables in my Supabase database\"\nYou: \"Query the users table and show first 5 records\"\n```\n\n**Assignment**: Connect Supabase and list your tables!"
+        },
+        {
+          "title": "5.2 Neon Database (Netlify DB)",
+          "order_number": 2,
+          "estimated_minutes": 40,
+          "content": "# Neon Database Integration\n\n## What is Neon?\n\n- Serverless PostgreSQL\n- Auto-scaling\n- Branching (like Git for databases!)\n- Powers Netlify DB\n- **Generous free tier**\n\n## Netlify DB (Powered by Neon)\n\nIf you use Netlify, you can get Neon database FREE:\n\n```bash\n# In your project directory\nnpx netlify db init\n```\n\nThis auto-creates a Neon database connected to your Netlify site!\n\n## Standalone Neon Setup\n\n1. Create account at [neon.tech](https://neon.tech)\n2. Create a new project\n3. Copy connection string\n\n## MCP Configuration\n\n```json\n{\n  \"mcpServers\": {\n    \"postgres\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@modelcontextprotocol/server-postgres\"],\n      \"env\": {\n        \"DATABASE_URL\": \"postgresql://user:pass@ep-xxx.region.neon.tech/neondb?sslmode=require\"\n      }\n    }\n  }\n}\n```\n\n## Neon-Specific Features\n\n### Database Branching\n```\nYou: \"Create a development branch of my production database\"\n```\n\n### Scale to Zero\n- Database auto-pauses when not in use\n- Saves costs on free tier\n- Wakes up automatically\n\n## Quick Test\n\n```\nYou: \"Create a table called 'students' with columns: id, name, email, enrolled_at\"\nYou: \"Insert a test record into students\"\nYou: \"Query all students\"\n```\n\n**Assignment**: Set up Neon and create a test table!"
+        },
+        {
+          "title": "5.3 Database Operations with Claude",
+          "order_number": 3,
+          "estimated_minutes": 50,
+          "content": "# Real Database Operations\n\n## Natural Language → SQL\n\nThe magic of Claude + Database:\n\n```\nYou: \"Show me all users who signed up in the last 7 days, \n      ordered by signup date, with their total order count\"\n\nClaude: (generates and executes)\nSELECT \n  u.id, u.name, u.email, u.created_at,\n  COUNT(o.id) as order_count\nFROM users u\nLEFT JOIN orders o ON u.id = o.user_id\nWHERE u.created_at > NOW() - INTERVAL '7 days'\nGROUP BY u.id\nORDER BY u.created_at DESC;\n```\n\n## Common Operations\n\n### Schema Design\n```\nYou: \"Design a database schema for a blog with:\n      - Posts (title, content, author, published_at)\n      - Comments (text, author, post_id)\n      - Tags (name)\n      - Posts can have many tags\"\n```\n\n### Data Migration\n```\nYou: \"Migrate all users with role='basic' to role='free_tier'\"\n```\n\n### Backup/Export\n```\nYou: \"Export the orders table as CSV\"\n```\n\n### Performance Analysis\n```\nYou: \"Analyze slow queries on the orders table and suggest indexes\"\n```\n\n## Safety First! ⚠️\n\n1. **Always review** before executing destructive queries\n2. **Use transactions** for bulk operations\n3. **Backup first** before migrations\n4. **Test on dev branch** (Neon branching!)\n\n## Pro Workflow\n\n```\nYou: \"I need to add a 'status' column to the orders table.\n      1. First show me the current schema\n      2. Generate the migration SQL\n      3. Test it on a dev branch\n      4. Show me the results before I approve production migration\"\n```\n\n**Assignment**: Design and create a database schema using natural language!"
+        }
+      ]
+    },
+    {
+      "title": "Module 6: Final Project - ClassroomNeo Integration",
+      "description": "Build the ultimate integration: Connect your Claude Desktop to ClassroomNeo for automated learning tracking!",
+      "order_number": 6,
+      "steps": [
+        {
+          "title": "6.1 Understanding the ClassroomNeo API",
+          "order_number": 1,
+          "estimated_minutes": 40,
+          "content": "# ClassroomNeo Integration Architecture\n\n## The Goal\n\nConnect YOUR Claude Desktop to ClassroomNeo so that:\n- Claude can check your learning progress\n- Claude can mark steps complete\n- Claude can submit assignments\n- Claude can track your activity automatically!\n\n## Architecture Overview\n\n```\n┌──────────────────┐     ┌─────────────────┐     ┌──────────────────┐\n│  Your Claude     │────▶│ ClassroomNeo    │────▶│    Supabase      │\n│  Desktop         │◀────│ API (Edge Fn)   │◀────│    Database      │\n└──────────────────┘     └─────────────────┘     └──────────────────┘\n         │                       │\n         │    Authentication     │\n         │   (API Key + User)    │\n         └───────────────────────┘\n```\n\n## API Endpoints (We'll Build)\n\n| Endpoint | Method | Description |\n|----------|--------|-------------|\n| `/api/student/progress` | GET | Get your progress |\n| `/api/student/complete-step` | POST | Mark step done |\n| `/api/student/submit` | POST | Submit assignment |\n| `/api/student/activity` | POST | Log activity |\n\n## Authentication Method\n\nWe'll use **API Keys** tied to your student account:\n- Each student gets a unique key\n- Key is stored in Claude Desktop config\n- All requests authenticated\n\n## Security Considerations\n\n✅ API keys scoped to student's own data only\n✅ Rate limiting to prevent abuse\n✅ Audit logging for all actions\n✅ Keys can be revoked if compromised\n\n**Next**: We'll create the API and generate your key!"
+        },
+        {
+          "title": "6.2 Building the ClassroomNeo API",
+          "order_number": 2,
+          "estimated_minutes": 60,
+          "content": "# Building the Student API\n\n## Netlify Edge Function: `/api/student`\n\nWe'll create a serverless function to handle Claude Desktop requests.\n\n### Step 1: Database Setup\n\nFirst, we need a table for API keys:\n\n```sql\n-- Run in Supabase SQL Editor\nCREATE TABLE student_api_keys (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id UUID REFERENCES users_profile(id),\n  api_key TEXT UNIQUE NOT NULL,\n  name TEXT DEFAULT 'Claude Desktop',\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  last_used_at TIMESTAMPTZ,\n  is_active BOOLEAN DEFAULT true\n);\n\n-- RLS Policy: Users can only see their own keys\nALTER TABLE student_api_keys ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"Users view own keys\"\n  ON student_api_keys FOR SELECT\n  USING (auth.uid() = user_id);\n```\n\n### Step 2: API Key Generation\n\nAdd to the ClassroomNeo dashboard:\n\n```javascript\n// Generate secure API key\nfunction generateApiKey() {\n  const prefix = 'crn_'; // ClassRoomNeo\n  const randomPart = crypto.randomUUID().replace(/-/g, '');\n  return prefix + randomPart;\n}\n```\n\n### Step 3: Netlify Function\n\nCreate `/netlify/functions/student-api.js`:\n\n```javascript\nconst { createClient } = require('@supabase/supabase-js');\n\nexports.handler = async (event) => {\n  const apiKey = event.headers['x-api-key'];\n  \n  if (!apiKey) {\n    return { statusCode: 401, body: 'Missing API key' };\n  }\n  \n  const supabase = createClient(\n    process.env.SUPABASE_URL,\n    process.env.SUPABASE_SERVICE_KEY\n  );\n  \n  // Validate key and get user\n  const { data: keyData } = await supabase\n    .from('student_api_keys')\n    .select('user_id')\n    .eq('api_key', apiKey)\n    .eq('is_active', true)\n    .single();\n    \n  if (!keyData) {\n    return { statusCode: 403, body: 'Invalid API key' };\n  }\n  \n  // Route to appropriate handler\n  const path = event.path.replace('/.netlify/functions/student-api', '');\n  \n  switch(path) {\n    case '/progress':\n      return getProgress(supabase, keyData.user_id);\n    case '/complete-step':\n      return completeStep(supabase, keyData.user_id, JSON.parse(event.body));\n    // ... more routes\n  }\n};\n```\n\n**Next**: Generate your personal API key!"
+        },
+        {
+          "title": "6.3 Generating Your API Key",
+          "order_number": 3,
+          "estimated_minutes": 30,
+          "content": "# Get Your Personal API Key\n\n## 🎓 Access the Key Generator\n\n1. Login to ClassroomNeo\n2. Go to Dashboard → Settings\n3. Click 'Claude Desktop Integration'\n4. Click 'Generate New API Key'\n\n## ⚠️ Important!\n\n- **Copy your key immediately** - it won't be shown again!\n- **Keep it secret** - treat it like a password\n- **One key per device** - generate new key for each machine\n\n## Your Key Format\n\n```\ncrn_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6\n```\n\n- `crn_` = ClassRoomNeo prefix\n- 32 character random string\n\n## Revoking Keys\n\nIf your key is compromised:\n1. Go to Dashboard → Settings\n2. Find the key\n3. Click 'Revoke'\n4. Generate a new one\n\n## What Your Key Can Do\n\n✅ Read YOUR progress only\n✅ Complete steps in YOUR enrolled classes\n✅ Submit assignments for YOU\n✅ Log activity for YOUR account\n\n❌ Cannot access other students' data\n❌ Cannot modify class content\n❌ Cannot perform admin actions\n\n**Assignment**: Generate your API key and save it securely!"
+        },
+        {
+          "title": "6.4 Configuring Claude Desktop MCP for ClassroomNeo",
+          "order_number": 4,
+          "estimated_minutes": 45,
+          "content": "# Connect Claude Desktop to ClassroomNeo\n\n## The Custom MCP Server\n\nWe've built a special MCP server for ClassroomNeo!\n\n## Installation\n\n### Option 1: NPM Package (Recommended)\n```bash\nnpm install -g @classroomneo/mcp-server\n```\n\n### Option 2: Direct from GitHub\n```bash\ngit clone https://github.com/broneotodak/classroomneo-mcp\ncd classroomneo-mcp\nnpm install && npm link\n```\n\n## Configuration\n\nAdd to your `claude_desktop_config.json`:\n\n### MacOS\n```json\n{\n  \"mcpServers\": {\n    \"classroomneo\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@classroomneo/mcp-server\"],\n      \"env\": {\n        \"CLASSROOMNEO_API_KEY\": \"crn_your_key_here\",\n        \"CLASSROOMNEO_URL\": \"https://classroom.neotodak.com\"\n      }\n    }\n  }\n}\n```\n\n### Windows\nSame config - update paths if needed.\n\n## Available Commands\n\nOnce connected, Claude can:\n\n```\nYou: \"Show my ClassroomNeo progress\"\nYou: \"Mark step 2.3 as complete\"\nYou: \"Submit my assignment for Module 3\"\nYou: \"What's my next incomplete step?\"\n```\n\n## Verify Connection\n\n```\nYou: \"Check my ClassroomNeo connection status\"\n\nClaude: ✅ Connected to ClassroomNeo!\n        Student: your-github-username\n        Enrolled Classes: 2\n        Overall Progress: 45%\n```\n\n**Assignment**: Configure the MCP server and verify connection!"
+        },
+        {
+          "title": "6.5 Final Challenge: Automated Learning",
+          "order_number": 5,
+          "estimated_minutes": 90,
+          "content": "# 🏆 Final Challenge\n\n## The Ultimate Test\n\nProve your Claude Desktop mastery by completing this automated workflow:\n\n## Challenge Requirements\n\n### Part 1: Setup Verification (20 pts)\n- [ ] Claude Desktop connected to GitHub\n- [ ] Claude Desktop connected to Netlify\n- [ ] Claude Desktop connected to Supabase/Neon\n- [ ] Claude Desktop connected to ClassroomNeo\n\n### Part 2: Automated Progress Check (20 pts)\nAsk Claude:\n```\n\"Check my ClassroomNeo progress and tell me which \nsteps I haven't completed yet in this course.\"\n```\n\nClaude should list your incomplete steps!\n\n### Part 3: Code a Feature (30 pts)\nAsk Claude:\n```\n\"Build a simple dashboard that shows my ClassroomNeo \nprogress. Include:\n- Total progress percentage\n- List of completed modules\n- Next step to complete\n\nPush it to GitHub and deploy to Netlify.\"\n```\n\n### Part 4: Automated Submission (30 pts)\nOnce deployed, ask Claude:\n```\n\"Submit my final project to ClassroomNeo:\n- GitHub repo: [your-repo-url]\n- Live site: [your-netlify-url]\n- Notes: Built entirely with Claude Desktop!\"\n```\n\n## Grading Criteria\n\n| Criteria | Points |\n|----------|--------|\n| All MCPs connected | 20 |\n| Progress check works | 20 |\n| Dashboard deployed | 30 |\n| Auto-submission works | 30 |\n| **Total** | **100** |\n\n## 🎉 Completion\n\nWhen you've completed all parts:\n1. Your submission will be AI-graded\n2. You'll receive a completion certificate\n3. You've proven Claude Desktop Mastery!\n\n**Good luck! Show us what you've learned!** 🚀"
+        }
+      ]
+    }
+  ]
+}
