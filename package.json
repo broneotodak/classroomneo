@@ -1,0 +1,25 @@
+{
+  "name": "classroomneo",
+  "version": "1.0.0",
+  "description": "ClassroomNeo - Full-Stack Learning Management System",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests configured\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/broneotodak/classroomneo.git"
+  },
+  "keywords": [
+    "lms",
+    "learning",
+    "education",
+    "supabase"
+  ],
+  "author": "Neo Todak",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "openai": "^4.0.0"
+  }
+}
