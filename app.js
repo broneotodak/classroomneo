@@ -861,10 +861,13 @@ class AIClassroom {
         return;
       }
 
-      // Render enrolled class cards
+      // Render enrolled class cards - filter out any with null class data
+      const validEnrollments = enrollments.filter(e => e.class !== null);
+      
       container.innerHTML = await Promise.all(
-        enrollments.map(async enrollment => {
+        validEnrollments.map(async enrollment => {
           const classData = enrollment.class;
+          if (!classData) return ''; // Extra safety check
           const progress = await this.getClassProgress(classData.id);
           
           // Get trainer info
