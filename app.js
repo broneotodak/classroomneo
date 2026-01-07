@@ -3042,10 +3042,10 @@ class AIClassroom {
         .select('*')
         .eq('step_id', stepId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
-      return data;
+      if (error) throw error;
+      return data; // Returns null if no assignment found, or the assignment object
     } catch (error) {
       console.error('Error loading assignment:', error);
       return null;
