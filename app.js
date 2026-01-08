@@ -1285,8 +1285,17 @@ class AIClassroom {
 
   // Get step content
   getStepContent(module, step) {
-    // This would typically come from a database or content files
-    // For now, we'll generate basic content structure
+    // Use actual content from database if available
+    if (step.content && step.content.trim()) {
+      // Parse markdown content using marked.js
+      try {
+        return `<div class="step-content markdown-content">${marked.parse(step.content)}</div>`;
+      } catch (e) {
+        console.error('Error parsing markdown:', e);
+        return `<div class="step-content"><pre>${this.escapeHtml(step.content)}</pre></div>`;
+      }
+    }
+    // Fall back to default placeholder if no content
     return this.getDefaultStepContent(module, step);
   }
 

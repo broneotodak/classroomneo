@@ -4885,3 +4885,170 @@ a:hover::after {
   }
 }
 
+
+/* ============================================
+   Markdown Content Styles for Course Steps
+   ============================================ */
+
+.markdown-content {
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.markdown-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem 0;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.75rem 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.markdown-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem 0;
+  color: var(--text-primary);
+}
+
+.markdown-content p {
+  margin: 1rem 0;
+  font-size: 1rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdown-content code {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9rem;
+  color: var(--accent-color);
+}
+
+.markdown-content pre {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--primary-color);
+  background: var(--card-bg);
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  font-style: italic;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-content blockquote p {
+  margin: 0;
+}
+
+.markdown-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  margin: 2rem 0;
+  border-radius: 2px;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.markdown-content th {
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+.markdown-content tr:hover {
+  background: rgba(var(--primary-rgb), 0.05);
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* Emoji and special content styling */
+.markdown-content h1:first-of-type {
+  font-size: 2.25rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Tips and important boxes */
+.markdown-content p:has(> strong:first-child) {
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-color);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .markdown-content h1 {
+    font-size: 1.75rem;
+  }
+  
+  .markdown-content h2 {
+    font-size: 1.35rem;
+  }
+  
+  .markdown-content pre {
+    font-size: 0.8rem;
+  }
+  
+  .markdown-content table {
+    display: block;
+    overflow-x: auto;
+  }
+}
