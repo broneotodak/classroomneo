@@ -832,7 +832,12 @@ class AIClassroom {
 
   async loadEnrolledClasses() {
     const container = document.getElementById('myClassesList');
-    if (!container) return;
+    if (!container) {
+      console.error('myClassesList container not found!');
+      return;
+    }
+    
+    console.log('Loading enrolled classes...');
 
     try {
       const userId = this.auth.getCurrentUser().id;
@@ -863,12 +868,14 @@ class AIClassroom {
 
       // Render enrolled class cards - filter out any with null class data
       const validEnrollments = enrollments.filter(e => e.class !== null);
+      console.log('Valid enrollments:', validEnrollments.length);
       
       container.innerHTML = await Promise.all(
         validEnrollments.map(async enrollment => {
           const classData = enrollment.class;
           if (!classData) return ''; // Extra safety check
           const progress = await this.getClassProgress(classData.id);
+          console.log(`Class ${classData.id} (${classData.name}) progress:`, progress);
           
           // Get trainer info
           let trainerInfo = '';
