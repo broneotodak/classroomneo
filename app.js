@@ -1194,10 +1194,44 @@ class AIClassroom {
       return;
     }
 
-    const module = this.progress.modules.find(m => m.slug === moduleSlug);
+    // First try to find module in cache
+    let module = this.progress.modules.find(m => m.slug === moduleSlug);
+
+    // If not in cache, fetch directly from database
+    // This handles cases like trainers/admins viewing classes they don't have enrolled
     if (!module) {
-      this.navigateTo('dashboard');
-      return;
+      try {
+        const { data: fetchedModule, error } = await this.supabase
+          .from('modules')
+          .select(`
+            *,
+            steps:steps(*),
+            class:classes(name)
+          `)
+          .eq('slug', moduleSlug)
+          .eq('is_active', true)
+          .single();
+
+        if (error || !fetchedModule) {
+          console.error('Module not found:', moduleSlug, error);
+          this.navigateTo('dashboard');
+          return;
+        }
+
+        // Sort steps by order
+        if (fetchedModule.steps) {
+          fetchedModule.steps.sort((a, b) => a.order_number - b.order_number);
+        }
+
+        module = fetchedModule;
+
+        // Add to cache for subsequent navigation
+        this.progress.modules.push(module);
+      } catch (err) {
+        console.error('Error fetching module:', err);
+        this.navigateTo('dashboard');
+        return;
+      }
     }
 
     this.currentModule = module;
