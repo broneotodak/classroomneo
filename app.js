@@ -594,73 +594,94 @@ class AIClassroom {
     if (!container) return;
 
     try {
-      const { data: modules, error } = await this.supabase
+      // Get modules with steps in one query
+      const { data: modules, error: modulesError } = await this.supabase
         .from('modules')
         .select(`
           *,
-          steps:steps(*)
+          steps:steps(id, title, order_number)
         `)
         .eq('class_id', classId)
         .eq('is_active', true)
         .order('order_number');
 
-      if (error) throw error;
-
-      if (!modules || modules.length === 0) {
-        container.innerHTML = '<div class="loading">No modules in this class yet.</div>';
+      if (modulesError) {
+        console.error('Error loading modules:', modulesError);
+        container.innerHTML = '<div class="error">Failed to load modules. Please try again.</div>';
         return;
       }
 
-      // Render module cards (similar to existing renderModulesList)
-      const userId = this.auth.getCurrentUser().id;
-      
-      container.innerHTML = await Promise.all(
-        modules.map(async module => {
-          const { data: allSteps } = await this.supabase
-            .from('steps')
-            .select('id')
-            .eq('module_id', module.id);
+      if (!modules || modules.length === 0) {
+        container.innerHTML = '<div class="info-message">No modules in this class yet.</div>';
+        return;
+      }
 
-          const { data: completedSteps } = await this.supabase
-            .from('user_progress')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('module_id', module.id)
-            .eq('status', 'completed');
+      // Get user ID safely
+      const userId = this.auth.getCurrentUser()?.id;
+      if (!userId) {
+        container.innerHTML = '<div class="error">Please log in to view modules.</div>';
+        return;
+      }
 
-          const totalSteps = allSteps ? allSteps.length : 0;
-          const completed = completedSteps ? completedSteps.length : 0;
-          const completionPercentage = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
-          const isCompleted = completed === totalSteps && totalSteps > 0;
-          const buttonText = isCompleted ? '🔄 Review' : (completed > 0 ? 'Continue' : 'Start');
-          const buttonClass = isCompleted ? 'btn-secondary' : 'btn-primary';
+      // Get all module IDs
+      const moduleIds = modules.map(m => m.id);
 
-          return `
-            <div class="module-card ${isCompleted ? 'module-completed' : ''}" data-module-id="${module.id}">
-              <div class="module-card-header">
-                <h3>${module.title}</h3>
-                <span class="module-badge ${isCompleted ? 'badge-completed' : ''}">${completed}/${totalSteps} steps</span>
-              </div>
-              <p class="module-description">${module.description || ''}</p>
-              <div class="module-progress-bar">
-                <div class="module-progress-fill" style="width: ${completionPercentage}%"></div>
-              </div>
-              <div class="module-card-footer">
-                <span class="module-progress-text">
-                  ${isCompleted ? '✅ Completed' : `${completionPercentage}% complete`}
-                </span>
-                <button class="btn ${buttonClass} btn-small" onclick="app.startModuleFromClass(${module.id}, '${module.slug}', ${classId})">
-                  ${buttonText} →
-                </button>
-              </div>
+      // Fetch all user progress for these modules in ONE query
+      const { data: userProgress, error: progressError } = await this.supabase
+        .from('user_progress')
+        .select('module_id, step_id, status')
+        .eq('user_id', userId)
+        .in('module_id', moduleIds)
+        .eq('status', 'completed');
+
+      if (progressError) {
+        console.error('Error loading progress:', progressError);
+      }
+
+      // Build progress map by module_id
+      const progressByModule = {};
+      (userProgress || []).forEach(p => {
+        if (!progressByModule[p.module_id]) {
+          progressByModule[p.module_id] = [];
+        }
+        progressByModule[p.module_id].push(p.step_id);
+      });
+
+      // Render module cards
+      container.innerHTML = modules.map(module => {
+        const totalSteps = module.steps ? module.steps.length : 0;
+        const completedStepIds = progressByModule[module.id] || [];
+        const completed = completedStepIds.length;
+        const completionPercentage = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
+        const isCompleted = completed === totalSteps && totalSteps > 0;
+        const buttonText = isCompleted ? '🔄 Review' : (completed > 0 ? 'Continue' : 'Start');
+        const buttonClass = isCompleted ? 'btn-secondary' : 'btn-primary';
+
+        return `
+          <div class="module-card ${isCompleted ? 'module-completed' : ''}" data-module-id="${module.id}">
+            <div class="module-card-header">
+              <h3>${module.title}</h3>
+              <span class="module-badge ${isCompleted ? 'badge-completed' : ''}">${completed}/${totalSteps} steps</span>
             </div>
-          `;
-        })
-      ).then(cards => cards.join(''));
+            <p class="module-description">${module.description || ''}</p>
+            <div class="module-progress-bar">
+              <div class="module-progress-fill" style="width: ${completionPercentage}%"></div>
+            </div>
+            <div class="module-card-footer">
+              <span class="module-progress-text">
+                ${isCompleted ? '✅ Completed' : `${completionPercentage}% complete`}
+              </span>
+              <button class="btn ${buttonClass} btn-small" onclick="app.startModuleFromClass(${module.id}, '${module.slug}', ${classId})">
+                ${buttonText} →
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
 
     } catch (error) {
       console.error('Error loading class modules:', error);
-      container.innerHTML = '<div class="error">Failed to load modules.</div>';
+      container.innerHTML = '<div class="error">Failed to load modules. Please refresh the page.</div>';
     }
   }
 
@@ -686,18 +707,34 @@ class AIClassroom {
     if (!container) return;
 
     try {
-      const userId = this.auth.getCurrentUser().id;
+      const userId = this.auth.getCurrentUser()?.id;
+      if (!userId) {
+        container.innerHTML = '<div class="error">Please log in to view assignments.</div>';
+        return;
+      }
+
       const stepIds = await this.getStepIdsForClass(classId);
 
-      const { data: assignments } = await this.supabase
+      if (!stepIds || stepIds.length === 0) {
+        container.innerHTML = '<div class="info-message">No assignments in this class yet.</div>';
+        return;
+      }
+
+      const { data: assignments, error: assignmentsError } = await this.supabase
         .from('assignments')
         .select('*')
         .in('step_id', stepIds)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
+      if (assignmentsError) {
+        console.error('Error loading assignments:', assignmentsError);
+        container.innerHTML = '<div class="error">Failed to load assignments.</div>';
+        return;
+      }
+
       if (!assignments || assignments.length === 0) {
-        container.innerHTML = '<div class="loading">No assignments in this class yet.</div>';
+        container.innerHTML = '<div class="info-message">No assignments in this class yet.</div>';
         return;
       }
 
@@ -947,87 +984,171 @@ class AIClassroom {
   }
 
   async getClassProgress(classId) {
-    const userId = this.auth.getCurrentUser().id;
-    
-    // Get modules count
-    const { data: modules } = await this.supabase
-      .from('modules')
-      .select('id')
-      .eq('class_id', classId)
-      .eq('is_active', true);
+    try {
+      const userId = this.auth.getCurrentUser()?.id;
+      if (!userId) {
+        console.error('No user ID available for getClassProgress');
+        return this.getEmptyProgress();
+      }
 
-    const totalModules = modules ? modules.length : 0;
+      // Get modules with their steps in one query
+      const { data: modules, error: modulesError } = await this.supabase
+        .from('modules')
+        .select('id, steps(id)')
+        .eq('class_id', classId)
+        .eq('is_active', true);
 
-    // Get completed modules (where all steps are completed)
-    let completedModules = 0;
-    if (modules) {
-      for (const module of modules) {
-        const { data: allSteps } = await this.supabase
-          .from('steps')
-          .select('id')
-          .eq('module_id', module.id);
+      if (modulesError) {
+        console.error('Error getting modules:', modulesError);
+        return this.getEmptyProgress();
+      }
 
-        const { data: completedSteps } = await this.supabase
-          .from('user_progress')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('module_id', module.id)
-          .eq('status', 'completed');
+      const totalModules = modules ? modules.length : 0;
 
-        if (allSteps && completedSteps && allSteps.length === completedSteps.length && allSteps.length > 0) {
-          completedModules++;
+      if (totalModules === 0) {
+        return this.getEmptyProgress();
+      }
+
+      // Get all module IDs
+      const moduleIds = modules.map(m => m.id);
+
+      // Get all user progress for these modules in one query
+      const { data: userProgress, error: progressError } = await this.supabase
+        .from('user_progress')
+        .select('module_id, step_id, status')
+        .eq('user_id', userId)
+        .in('module_id', moduleIds)
+        .eq('status', 'completed');
+
+      if (progressError) {
+        console.error('Error getting user progress:', progressError);
+      }
+
+      // Calculate completed modules
+      let completedModules = 0;
+      if (modules && userProgress) {
+        for (const module of modules) {
+          const totalSteps = module.steps ? module.steps.length : 0;
+          if (totalSteps === 0) continue;
+
+          const completedStepsInModule = userProgress.filter(
+            p => p.module_id === module.id
+          ).length;
+
+          if (completedStepsInModule >= totalSteps) {
+            completedModules++;
+          }
         }
       }
+
+      // Get step IDs for assignments query
+      const stepIds = await this.getStepIdsForClass(classId);
+
+      // Get assignments count
+      let totalAssignments = 0;
+      let gradedAssignments = 0;
+
+      if (stepIds.length > 0) {
+        const { data: assignments, error: assignmentsError } = await this.supabase
+          .from('assignments')
+          .select('id')
+          .in('step_id', stepIds);
+
+        if (assignmentsError) {
+          console.error('Error getting assignments:', assignmentsError);
+        } else if (assignments && assignments.length > 0) {
+          totalAssignments = assignments.length;
+          const assignmentIds = assignments.map(a => a.id);
+
+          // Get graded submissions
+          const { data: submissions, error: subsError } = await this.supabase
+            .from('submissions')
+            .select('id')
+            .eq('student_id', userId)
+            .in('assignment_id', assignmentIds);
+
+          if (!subsError && submissions && submissions.length > 0) {
+            const submissionIds = submissions.map(s => s.id);
+
+            const { data: grades, error: gradesError } = await this.supabase
+              .from('grades')
+              .select('submission_id')
+              .in('submission_id', submissionIds);
+
+            if (!gradesError && grades) {
+              gradedAssignments = grades.length;
+            }
+          }
+        }
+      }
+
+      const completionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+      const certificateEligible = totalModules > 0 &&
+        completedModules === totalModules &&
+        totalAssignments > 0 &&
+        gradedAssignments === totalAssignments;
+
+      return {
+        totalModules,
+        completedModules,
+        totalAssignments,
+        gradedAssignments,
+        completionPercentage,
+        certificateEligible
+      };
+    } catch (err) {
+      console.error('Error in getClassProgress:', err);
+      return this.getEmptyProgress();
     }
+  }
 
-    // Get assignments count
-    const { data: assignments } = await this.supabase
-      .from('assignments')
-      .select('id, step_id')
-      .in('step_id', await this.getStepIdsForClass(classId));
-
-    const totalAssignments = assignments ? assignments.length : 0;
-
-    // Get graded assignments
-    const { data: submissions } = await this.supabase
-      .from('submissions')
-      .select('id, assignment_id')
-      .eq('student_id', userId)
-      .in('assignment_id', assignments ? assignments.map(a => a.id) : []);
-
-    const { data: grades } = await this.supabase
-      .from('grades')
-      .select('submission_id')
-      .in('submission_id', submissions ? submissions.map(s => s.id) : []);
-
-    const gradedAssignments = grades ? grades.length : 0;
-
-    const completionPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
-    const certificateEligible = completedModules === totalModules && gradedAssignments === totalAssignments && totalAssignments > 0;
-
+  getEmptyProgress() {
     return {
-      totalModules,
-      completedModules,
-      totalAssignments,
-      gradedAssignments,
-      completionPercentage,
-      certificateEligible
+      totalModules: 0,
+      completedModules: 0,
+      totalAssignments: 0,
+      gradedAssignments: 0,
+      completionPercentage: 0,
+      certificateEligible: false
     };
   }
 
   async getStepIdsForClass(classId) {
-    const { data: steps } = await this.supabase
-      .from('steps')
-      .select('id, module_id')
-      .in('module_id', 
-        await this.supabase
-          .from('modules')
-          .select('id')
-          .eq('class_id', classId)
-          .then(res => res.data ? res.data.map(m => m.id) : [])
-      );
-    
-    return steps ? steps.map(s => s.id) : [];
+    try {
+      // First get module IDs for this class
+      const { data: modules, error: modulesError } = await this.supabase
+        .from('modules')
+        .select('id')
+        .eq('class_id', classId)
+        .eq('is_active', true);
+
+      if (modulesError) {
+        console.error('Error getting modules for class:', modulesError);
+        return [];
+      }
+
+      if (!modules || modules.length === 0) {
+        return [];
+      }
+
+      const moduleIds = modules.map(m => m.id);
+
+      // Then get step IDs for those modules
+      const { data: steps, error: stepsError } = await this.supabase
+        .from('steps')
+        .select('id')
+        .in('module_id', moduleIds);
+
+      if (stepsError) {
+        console.error('Error getting steps for modules:', stepsError);
+        return [];
+      }
+
+      return steps ? steps.map(s => s.id) : [];
+    } catch (err) {
+      console.error('Error in getStepIdsForClass:', err);
+      return [];
+    }
   }
 
   async loadAvailableClassesForDashboard() {
