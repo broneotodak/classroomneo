@@ -117,34 +117,57 @@ class ProgressManager {
     }
 
     try {
-      const existing = this.getStepProgress(stepId);
+      const userId = this.auth.getCurrentUser().id;
 
-      if (existing) {
+      // First, check if progress already exists in DB (not just cache)
+      // This prevents race conditions when cache is stale
+      const { data: existingInDb } = await this.supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('step_id', stepId)
+        .maybeSingle();
+
+      if (existingInDb) {
         // DON'T update if already completed - allow review without losing progress
-        if (existing.status === 'completed') {
-          return existing;
+        if (existingInDb.status === 'completed') {
+          // Update local cache if needed
+          const cacheIndex = this.userProgress.findIndex(p => p.id === existingInDb.id);
+          if (cacheIndex >= 0) {
+            this.userProgress[cacheIndex] = existingInDb;
+          } else {
+            this.userProgress.push(existingInDb);
+          }
+          return existingInDb;
         }
-        
+
         // Update existing progress to in_progress (only if not completed)
         const { data, error } = await this.supabase
           .from('user_progress')
           .update({
             status: 'in_progress',
-            started_at: existing.started_at || new Date().toISOString()
+            started_at: existingInDb.started_at || new Date().toISOString()
           })
-          .eq('id', existing.id)
+          .eq('id', existingInDb.id)
           .select()
           .single();
 
         if (error) throw error;
-        this.updateLocalProgress(data);
+
+        // Update local cache
+        const cacheIndex = this.userProgress.findIndex(p => p.id === data.id);
+        if (cacheIndex >= 0) {
+          this.userProgress[cacheIndex] = data;
+        } else {
+          this.userProgress.push(data);
+        }
         return data;
       } else {
         // Create new progress entry
         const { data, error } = await this.supabase
           .from('user_progress')
           .insert({
-            user_id: this.auth.getCurrentUser().id,
+            user_id: userId,
             module_id: moduleId,
             step_id: stepId,
             status: 'in_progress',
@@ -170,9 +193,17 @@ class ProgressManager {
     }
 
     try {
-      const existing = this.getStepProgress(stepId);
+      const userId = this.auth.getCurrentUser().id;
 
-      if (existing) {
+      // Check if progress exists in DB (not just cache) to prevent race conditions
+      const { data: existingInDb } = await this.supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('step_id', stepId)
+        .maybeSingle();
+
+      if (existingInDb) {
         // Update existing progress
         const { data, error } = await this.supabase
           .from('user_progress')
@@ -181,19 +212,26 @@ class ProgressManager {
             completed_at: new Date().toISOString(),
             notes: notes
           })
-          .eq('id', existing.id)
+          .eq('id', existingInDb.id)
           .select()
           .single();
 
         if (error) throw error;
-        this.updateLocalProgress(data);
+
+        // Update local cache
+        const cacheIndex = this.userProgress.findIndex(p => p.id === data.id);
+        if (cacheIndex >= 0) {
+          this.userProgress[cacheIndex] = data;
+        } else {
+          this.userProgress.push(data);
+        }
         return data;
       } else {
         // Create new completed progress entry
         const { data, error } = await this.supabase
           .from('user_progress')
           .insert({
-            user_id: this.auth.getCurrentUser().id,
+            user_id: userId,
             module_id: moduleId,
             step_id: stepId,
             status: 'completed',
