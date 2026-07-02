@@ -22,7 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- Enhanced Stylesheet with Media Queries & Animations -->
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
     
     <!-- Design System Notes (visible to AI crawlers) -->
     <!--
@@ -130,7 +130,7 @@
                     </div>
 
                     <!-- Signature: a real Claude Code session, plain English to live app -->
-                    <div class="terminal" role="img" aria-label="Example Claude Code session: a student types a plain-English request to build an online batik store, and Claude Code creates the files, connects a database, and deploys it live.">
+                    <div class="terminal" id="heroTerminal" role="img" aria-label="Example Claude Code session: a student types a plain-English request to build an online batik store, and Claude Code creates the files, connects a database, and deploys it live.">
                         <div class="terminal-bar">
                             <span class="terminal-dot"></span>
                             <span class="terminal-dot"></span>
@@ -138,7 +138,7 @@
                             <span class="terminal-title">claude&nbsp;code — my-first-app</span>
                         </div>
                         <div class="terminal-body">
-                            <p class="term-line"><span class="term-prompt">you&nbsp;›</span> build me a website to sell my batik online</p>
+                            <p class="term-line"><span class="term-prompt">you&nbsp;›</span> <span class="term-req">build me a website to sell my batik online</span></p>
                             <p class="term-line term-claude"><span class="term-tag">✳ claude</span> On it. Setting up your shop…</p>
                             <p class="term-line term-ok">✓ Created the storefront and product pages</p>
                             <p class="term-line term-ok">✓ Connected a database for orders</p>
@@ -905,5 +905,6 @@
     <script src="progress.js?v=4"></script>
     <script src="ai-grading.js?v=4"></script>
     <script src="app.js?v=5"></script>
+    <script src="hero.js?v=1"></script>
 </body>
 </html>
