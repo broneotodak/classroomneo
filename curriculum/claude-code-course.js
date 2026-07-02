@@ -41,6 +41,8 @@ An LLM — the thing behind ChatGPT and Claude — works the **same way**, with 
 
 So when you ask *"What's the capital of Malaysia?"*, it doesn't "look up" the answer. It predicts the answer one word at a time — "Kuala… Lumpur" — and because it read so much, those predictions are usually right and useful.
 
+<div class="cc-demo" data-demo="autocomplete"></div>
+
 ## The one-line mental model
 > Your phone guesses **your** sentence. An LLM guesses **the answer** — trained on the whole world.
 
@@ -92,6 +94,8 @@ If you search *"when do I pay my workers?"*, a normal search finds nothing — n
 
 This is called **semantic search**, and it's how AI can remember and sift through huge amounts of information without getting lost.
 
+<div class="cc-demo" data-demo="semantic-search"></div>
+
 > You'll set this up yourself later (it's called **pgvector**) to give Claude a long-term memory.`,
         },
         {
@@ -120,6 +124,8 @@ This is the whole shift: from *"an AI that answers questions"* to *"an AI that g
 
 Claude Code takes this the furthest, because it lives on your computer and can use the real tools there — reading and writing files, running commands, and deploying your work.
 
+<div class="cc-demo" data-demo="reason-act"></div>
+
 > Mental model: **reason + act**. The more tools (skills) you give it, the more it can actually build.`,
         },
         {
@@ -137,6 +143,8 @@ Every time the AI answers, it re-reads the **entire conversation from the start*
 
 ## Why you should care
 This is *the* reason AI sometimes seems to "forget" what you said earlier in a very long session, or gets slower and less sharp.
+
+<div class="cc-demo" data-demo="context-window"></div>
 
 > Mental model: a longer conversation = a heavier load. Which is exactly why AI needs **memory outside the chat** — coming up next.`,
         },

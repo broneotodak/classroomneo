@@ -856,8 +856,9 @@ body {
 
 .progress-card-value {
     font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: -0.01em;
 }
 
 /* Continue Section */
@@ -1348,9 +1349,11 @@ body {
     flex-shrink: 0;
 }
 
-.step-title {
+.sidebar-step .step-title {
     flex: 1;
     font-weight: 500;
+    font-size: 0.9rem;
+    line-height: 1.35;
 }
 
 .step-duration {
@@ -1395,10 +1398,11 @@ body {
     font-size: 0.875rem;
 }
 
-.step-title {
-    font-size: 2.5rem;
+.step-header .step-title {
+    font-size: 2.3rem;
     font-weight: 800;
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
 }
 
 .step-body {
@@ -5017,25 +5021,24 @@ a:hover::after {
 }
 
 .markdown-content h1 {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  margin: 2rem 0 1rem 0;
-  color: var(--primary-color);
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 0.5rem;
+  margin: 0.25rem 0 1.35rem 0;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .markdown-content h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 1.75rem 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 2rem 0 0.85rem 0;
   color: var(--text-primary);
 }
 
 .markdown-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 1.5rem 0 0.75rem 0;
+  margin: 1.5rem 0 0.6rem 0;
   color: var(--text-primary);
 }
 
@@ -5060,9 +5063,9 @@ a:hover::after {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 0.2rem 0.5rem;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: 0.9rem;
-  color: var(--accent-color);
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  color: var(--primary-color);
 }
 
 .markdown-content pre {
@@ -5078,8 +5081,9 @@ a:hover::after {
   background: transparent;
   border: none;
   padding: 0;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.85rem;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--text-primary);
 }
 
@@ -5127,7 +5131,7 @@ a:hover::after {
 }
 
 .markdown-content tr:hover {
-  background: rgba(var(--primary-rgb), 0.05);
+  background: var(--primary-light);
 }
 
 .markdown-content strong {

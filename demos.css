@@ -1,0 +1,102 @@
+/* ============================================================
+   Interactive lesson demos — warm theme (uses tokens from styles.css)
+   ============================================================ */
+.cc-demo {
+  margin: 1.75rem 0;
+  padding: 1.25rem 1.35rem 1.35rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.cc-demo-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.cc-demo-tag {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--primary-color); background: var(--primary-light);
+  padding: 0.2rem 0.55rem; border-radius: var(--radius-full);
+}
+.cc-demo-cap { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
+.cc-demo-btn {
+  margin-top: 1rem; padding: 0.5rem 1.1rem; font-size: 0.85rem; font-weight: 600;
+  color: #fff; background: var(--gradient); border: none; border-radius: var(--radius-md);
+  cursor: pointer; transition: transform 0.15s ease, opacity 0.15s ease; font-family: inherit;
+}
+.cc-demo-btn:hover { transform: translateY(-1px); }
+.cc-demo-btn:disabled { opacity: 0.55; cursor: default; transform: none; }
+.cc-demo-btn.cc-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
+
+/* 1 — autocomplete */
+.cc-ac-q { font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem; }
+.cc-ac-line {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 1.15rem; color: var(--primary-color);
+  min-height: 1.6em; margin-bottom: 0.9rem;
+}
+.cc-ac-caret { display: inline-block; width: 9px; height: 1.05em; vertical-align: text-bottom;
+  background: var(--primary-color); animation: ccBlink 1.1s steps(1) infinite; margin-left: 2px; }
+.cc-ac-cand { display: grid; grid-template-columns: 7.5rem 1fr 3rem; align-items: center; gap: 0.7rem; margin: 0.32rem 0; }
+.cc-ac-word { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-secondary); }
+.cc-ac-cand.win .cc-ac-word { color: var(--text-primary); font-weight: 700; }
+.cc-ac-bar { height: 8px; background: var(--primary-light); border-radius: var(--radius-full); overflow: hidden; }
+.cc-ac-bar span { display: block; height: 100%; background: var(--border-color); border-radius: inherit; transition: width 0.85s cubic-bezier(.2,.8,.2,1); }
+.cc-ac-cand.win .cc-ac-bar span { background: var(--gradient); }
+.cc-ac-pct { font-size: 0.78rem; color: var(--text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 2 — semantic search */
+.cc-ss-qrow { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.cc-ss-q {
+  font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: var(--radius-full); cursor: pointer;
+  background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color);
+  transition: all 0.15s ease; font-family: inherit;
+}
+.cc-ss-q:hover { border-color: var(--primary-color); color: var(--primary-color); }
+.cc-ss-q.on { background: var(--gradient); color: #fff; border-color: transparent; }
+.cc-ss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.cc-ss-h { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.55rem; text-align: center; }
+.cc-ss-h small { color: var(--text-secondary); font-weight: 500; }
+.cc-ss-note {
+  position: relative; font-size: 0.82rem; color: var(--text-primary); background: var(--light-bg);
+  border: 1px solid var(--border-color); border-left: 3px solid var(--border-color);
+  border-radius: var(--radius-sm); padding: 0.55rem 0.7rem; margin: 0.4rem 0; transition: all 0.3s ease;
+}
+.cc-ss-tagd { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 0.15rem; }
+.cc-ss-note.hit { border-left-color: var(--success-color); background: rgba(74,157,120,0.12); box-shadow: var(--shadow-sm); }
+.cc-ss-note.dim { opacity: 0.4; }
+@media (max-width: 560px) { .cc-ss-grid { grid-template-columns: 1fr; } }
+
+/* 3 — reason + act */
+.cc-ra-req { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.7rem; }
+.cc-ra-req b { color: var(--primary-color); }
+.cc-ra-think { font-size: 0.85rem; color: var(--text-secondary); min-height: 1.3em; margin-bottom: 0.8rem; opacity: 0; transition: opacity 0.3s ease; }
+.cc-ra-think.on { opacity: 1; }
+.cc-ra-tool {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.7rem;
+  padding: 0.55rem 0.8rem; margin: 0.4rem 0; border-radius: var(--radius-md);
+  background: var(--light-bg); border: 1px solid var(--border-color); transition: all 0.25s ease;
+}
+.cc-ra-name { font-size: 0.86rem; color: var(--text-primary); }
+.cc-ra-state { font-size: 0.72rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+.cc-ra-tool.running { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-light); }
+.cc-ra-tool.running .cc-ra-state { color: var(--primary-color); }
+.cc-ra-tool.done { border-color: var(--success-color); }
+.cc-ra-tool.done .cc-ra-state { color: var(--success-color); }
+
+/* 4 — context window */
+.cc-cw-meter { position: relative; height: 30px; background: var(--light-bg); border: 1px solid var(--border-color);
+  border-radius: var(--radius-full); overflow: hidden; margin-bottom: 0.7rem; }
+.cc-cw-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--gradient);
+  border-radius: inherit; transition: width 0.5s cubic-bezier(.2,.8,.2,1); }
+.cc-cw-fill.hot { background: linear-gradient(135deg, var(--accent-color), var(--primary-color)); }
+.cc-cw-fill.full { background: linear-gradient(135deg, var(--error-color), var(--secondary-color)); }
+.cc-cw-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.cc-cw-stats { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); min-height: 1.2em; }
+.cc-cw-stats [data-warn] { color: var(--accent-color); font-weight: 600; }
+.cc-cw-btns { display: flex; gap: 0.6rem; }
+
+@keyframes ccBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cc-ac-caret { animation: none; }
+  .cc-ac-bar span, .cc-cw-fill, .cc-ra-think, .cc-ra-tool, .cc-ss-note { transition: none; }
+}
