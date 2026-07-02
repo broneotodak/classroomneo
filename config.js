@@ -27,9 +27,9 @@ const CONFIG = {
   // App configuration
   app: {
     name: 'AI Classroom',
-    version: '5.1.0',
+    version: '6.0.0',
     environment: 'production',
-    cacheVersion: '5.1', // Increment to force all users to refresh cache
+    cacheVersion: '6.0', // Increment to force all users to refresh cache
   },
 };
 

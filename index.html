@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Classroom - Full Stack Development Tutorial</title>
-    
+    <title>AI Classroom — Learn to Build with Claude Code</title>
+
     <!-- SEO & Quality Indicators -->
-    <meta name="description" content="Modern, responsive AI-powered classroom with professional UI/UX design, mobile-optimized layouts, and interactive learning experience">
-    <meta name="keywords" content="education, AI, learning platform, responsive design, modern UI">
+    <meta name="description" content="Turn plain-English ideas into live websites and apps with Claude Code. A hands-on classroom by Todak Studios — no coding background needed.">
+    <meta name="keywords" content="Claude Code, learn to code with AI, build apps, no-code, GitHub, Supabase, Netlify, Todak Studios">
     <meta name="author" content="Todak Studios">
-    
+
     <!-- Mobile Optimization Meta Tags -->
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#D97757">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,10 +19,10 @@
     <!-- Professional Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
     <!-- Enhanced Stylesheet with Media Queries & Animations -->
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
     
     <!-- Design System Notes (visible to AI crawlers) -->
     <!--
@@ -115,12 +115,9 @@
             <div class="hero">
                 <div class="container">
                     <div class="hero-content">
-                        <h1 class="hero-title">Master Full Stack Development</h1>
-                        <p class="hero-subtitle">Start your journey by creating a GitHub account, then learn to build, deploy, and scale modern web applications</p>
-                        <div class="hero-callout">
-                            <span class="callout-icon">👉</span>
-                            <span class="callout-text">First step: Create your free GitHub account to unlock all features</span>
-                        </div>
+                        <span class="hero-eyebrow">Todak Studios · Classroom</span>
+                        <h1 class="hero-title">Build real apps by talking to AI</h1>
+                        <p class="hero-subtitle">No coding background needed. Turn plain-English ideas into live websites and apps with Claude Code — the same AI workflow real builders use every day.</p>
                         <div class="hero-buttons">
                             <button id="getStartedBtn" class="btn btn-primary">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
@@ -128,30 +125,49 @@
                                 </svg>
                                 Start with GitHub
                             </button>
-                            <a href="#about" class="btn btn-secondary">Learn More</a>
+                            <a href="#about" class="btn btn-secondary">See how it works</a>
                         </div>
                     </div>
+
+                    <!-- Signature: a real Claude Code session, plain English to live app -->
+                    <div class="terminal" role="img" aria-label="Example Claude Code session: a student types a plain-English request to build an online batik store, and Claude Code creates the files, connects a database, and deploys it live.">
+                        <div class="terminal-bar">
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-title">claude&nbsp;code — my-first-app</span>
+                        </div>
+                        <div class="terminal-body">
+                            <p class="term-line"><span class="term-prompt">you&nbsp;›</span> build me a website to sell my batik online</p>
+                            <p class="term-line term-claude"><span class="term-tag">✳ claude</span> On it. Setting up your shop…</p>
+                            <p class="term-line term-ok">✓ Created the storefront and product pages</p>
+                            <p class="term-line term-ok">✓ Connected a database for orders</p>
+                            <p class="term-line term-ok">✓ Deployed live — your shop is online 🎉</p>
+                            <p class="term-line"><span class="term-prompt">you&nbsp;›</span> <span class="term-cursor"></span></p>
+                        </div>
+                    </div>
+
                     <div class="tech-stack">
                         <div class="tech-card tech-card-primary">
                             <div class="card-badge">Start Here</div>
                             <span class="tech-icon">🐙</span>
                             <h3>1. GitHub</h3>
-                            <p>Create your account</p>
+                            <p>Create your free account</p>
                         </div>
                         <div class="tech-card">
-                            <span class="tech-icon">⚡</span>
-                            <h3>2. Cursor AI</h3>
-                            <p>Download & setup</p>
+                            <span class="tech-icon">✳️</span>
+                            <h3>2. Claude Code</h3>
+                            <p>Your AI building partner</p>
                         </div>
                         <div class="tech-card">
                             <span class="tech-icon">💾</span>
                             <h3>3. Supabase</h3>
-                            <p>Backend & auth</p>
+                            <p>Store your data</p>
                         </div>
                         <div class="tech-card">
                             <span class="tech-icon">🚀</span>
                             <h3>4. Netlify</h3>
-                            <p>Deploy your site</p>
+                            <p>Put it online</p>
                         </div>
                     </div>
                 </div>
@@ -159,27 +175,27 @@
 
             <div id="about" class="features-section">
                 <div class="container">
-                    <h2 class="section-title">Why AI Classroom?</h2>
+                    <h2 class="section-title">Why learn here?</h2>
                     <div class="features-grid">
                         <div class="feature-card">
-                            <div class="feature-icon">🎯</div>
-                            <h3>Structured Learning Path</h3>
-                            <p>Follow a clear, step-by-step curriculum designed for beginners</p>
+                            <div class="feature-icon">💬</div>
+                            <h3>Talk, don't type code</h3>
+                            <p>Describe what you want in plain English and Claude Code writes it for you. Start from zero — no programming background required.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🛠️</div>
+                            <h3>Build real, live projects</h3>
+                            <p>Every module ends with something you can actually use and share — a real website or app, deployed to the internet.</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">📊</div>
-                            <h3>Progress Tracking</h3>
-                            <p>Track your learning journey and see how far you've come</p>
+                            <h3>See your progress</h3>
+                            <p>Follow a clear, step-by-step path and watch how far you've come, one finished project at a time.</p>
                         </div>
                         <div class="feature-card">
-                            <div class="feature-icon">🤝</div>
-                            <h3>GitHub Integration</h3>
-                            <p>Sign in with GitHub and build your developer portfolio</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">💡</div>
-                            <h3>Hands-on Projects</h3>
-                            <p>Build real projects and deploy them to production</p>
+                            <div class="feature-icon">🎓</div>
+                            <h3>Earn your certificate</h3>
+                            <p>Finish a class and download a certificate that shows what you built — proof you can ship with AI.</p>
                         </div>
                     </div>
                 </div>
@@ -604,15 +620,15 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>🎓 AI Classroom</h4>
-                    <p>Learn modern web development with AI-powered tools</p>
+                    <p>Learn to build real apps with Claude Code</p>
                 </div>
                 <div class="footer-section">
                     <h4>Resources</h4>
                     <ul>
-                        <li><a href="https://cursor.sh" target="_blank">Cursor Docs</a></li>
-                        <li><a href="https://docs.github.com" target="_blank">GitHub Docs</a></li>
-                        <li><a href="https://docs.netlify.com" target="_blank">Netlify Docs</a></li>
-                        <li><a href="https://supabase.com/docs" target="_blank">Supabase Docs</a></li>
+                        <li><a href="https://docs.claude.com/en/docs/claude-code" target="_blank" rel="noopener">Claude Code Docs</a></li>
+                        <li><a href="https://docs.github.com" target="_blank" rel="noopener">GitHub Docs</a></li>
+                        <li><a href="https://supabase.com/docs" target="_blank" rel="noopener">Supabase Docs</a></li>
+                        <li><a href="https://docs.netlify.com" target="_blank" rel="noopener">Netlify Docs</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -625,8 +641,8 @@
                 </div>
                 <div class="footer-section">
                     <h4>About</h4>
-                    <p>© 2025 AI Classroom</p>
-                    <p>Version 2.0.0</p>
+                    <p>© 2026 AI Classroom · Todak Studios</p>
+                    <p>Built with Claude Code</p>
                 </div>
             </div>
         </div>

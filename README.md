@@ -1,6 +1,6 @@
 # 🎓 AI Classroom v2.0 - Full Stack Development Tutorial
 
-A comprehensive, interactive tutorial platform with **GitHub OAuth authentication** and **progress tracking** that teaches students how to build, deploy, and scale modern web applications using **Cursor AI**, **GitHub**, **Netlify**, and **Supabase**.
+A comprehensive, interactive tutorial platform with **GitHub OAuth authentication** and **progress tracking** that teaches students how to build, deploy, and scale modern web applications using **Claude Code**, **GitHub**, **Netlify**, and **Supabase**.
 
 ![AI Classroom](https://img.shields.io/badge/Tutorial-Full%20Stack-blue)
 ![Version](https://img.shields.io/badge/Version-2.0-green)
@@ -82,12 +82,12 @@ ClassroomNeo/
 
 ## 📚 Learning Modules
 
-### 1. Cursor AI Setup (45 min)
-Learn to install and use the AI-powered code editor
-- Download and install Cursor
-- Configure AI features
-- Create your first project
-- Master keyboard shortcuts
+### 1. Claude Code Setup (45 min)
+Learn to install and use your AI coding partner
+- Install Claude Code
+- Sign in and start your first session
+- Create your first project by describing it in plain English
+- Learn the core prompting workflow
 
 ### 2. GitHub Integration (60 min)
 Master version control and collaboration
@@ -240,7 +240,7 @@ This is an educational project designed for teaching. Feel free to:
 
 ## 📖 Additional Resources
 
-- [Cursor Documentation](https://cursor.sh/docs)
+- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
 - [GitHub Guides](https://guides.github.com/)
 - [Netlify Documentation](https://docs.netlify.com/)
 - [Supabase Documentation](https://supabase.com/docs)
