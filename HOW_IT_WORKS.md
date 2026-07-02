@@ -129,13 +129,13 @@ user_progress
 ```
 Class: "Todak Studios Bandung 2025"
 ├── Module 1: GitHub Account Setup (5 steps)
-├── Module 2: Cursor AI Setup (5 steps)
+├── Module 2: Claude Code Setup (5 steps)
 ├── Module 3: Supabase Backend (7 steps)
 └── Module 4: Netlify Deployment (5 steps)
 
 Class: "Spring 2026 Bootcamp"
 ├── Module 1: GitHub Account Setup (5 steps) ← DIFFERENT from above
-├── Module 2: Cursor AI Setup (5 steps)       ← DIFFERENT from above
+├── Module 2: Claude Code Setup (5 steps)       ← DIFFERENT from above
 ├── Module 3: Supabase Backend (7 steps)      ← DIFFERENT from above
 └── Module 4: Netlify Deployment (5 steps)    ← DIFFERENT from above
 ```

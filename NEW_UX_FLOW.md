@@ -77,7 +77,7 @@ Redesigning the entire user experience to be **class-centric** instead of module
 ├─────────────────────────────────────────┤
 │ MODULES                                 │
 │ ┌─────────────────┐ ┌───────────────┐  │
-│ │ GitHub Setup    │ │ Cursor Setup  │  │
+│ │ GitHub Setup    │ │ Claude Setup  │  │
 │ │ ✅ Complete     │ │ ✅ Complete   │  │
 │ │ [Review →]      │ │ [Review →]    │  │
 │ └─────────────────┘ └───────────────┘  │
